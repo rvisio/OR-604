@@ -52,16 +52,18 @@ def sqlQuestionOne():
     import os
     import sqlite3
     import csv
+    
+    # gets path of python script and pulls mcdonalds csv from that directory
     __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
     file = os.path.join(__location__, 'mcDonalds.csv')
+    
+    # creates db, sets up cursor
     myConnection = sqlite3.connect('mcD.db')
     myCursor = myConnection.cursor()
 
-
-    deleteSQL = """ DROP TABLE IF EXISTS STORES """
-    
+    # delete the stores table if it already exists
+    deleteSQL = """ DROP TABLE IF EXISTS stores """
     myCursor.execute(deleteSQL)
-    
     myConnection.commit()
     
     #create stores table
@@ -76,21 +78,23 @@ def sqlQuestionOne():
                          storeNumber integer); """
 
     myCursor.execute(createTableSQL)    
-    
     myConnection.commit()    
     
+    # read the mcdonalds csv 
     myFile = open(__location__ + '\\mcDonalds.csv','rt')
     myReader = csv.reader(myFile)
     
     tempList = []
     
+    # insert values into stores table
     for row in myReader:
         tempList.append(tuple(row))
         if len(tempList) % 5000 == 0:
             myCursor.executemany('INSERT INTO stores VALUES(?,?,?,?,?,?,?,?);',tempList)
             tempList =[]
             myConnection.commit()
-            
+        
+    # clean up
     myCursor.close()
     myConnection.close()
     myFile.close()
