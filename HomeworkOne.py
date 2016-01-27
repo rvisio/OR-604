@@ -20,13 +20,14 @@ def questionTwo(a,b,c):
     return max(a,b,c)
     
 def questionThree(a,b):
+    
     """
     binomial expansion one
     """
 
 def questionFour(n,k):
-    for i in range(0,k):
-        print(random.randint(0,n))
+    #for #i in range(0,k):
+    print random.sample(range(n),k)
     
 def questionFive(a,b):
     return (str(a) +str(b))
@@ -40,8 +41,8 @@ def questionSix():
     print("Question two using values 500, 6, 10000")
     print(questionTwo(500,6,10000))
     
-    print("Question Four using values 20,50")
-    print(questionFour(20,50))
+    print("Question Four using values n=50,k=50")
+    print(questionFour(50,50))
     
     print("Question five using values 500 and 10000")
     print(questionFive(500,10000))
@@ -50,8 +51,8 @@ def questionSix():
  
     
     
-    
-#questionSix()
+
+questionSix()
 
 def sqlQuestionOne():
     
@@ -86,6 +87,9 @@ def sqlQuestionOne():
     myCursor.execute(createTableSQL)    
     myConnection.commit()    
     
+    
+    
+    
     # read the mcdonalds csv 
     myFile = open(__location__ + '\\mcDonalds.csv','rt')
     myReader = csv.reader(myFile)
@@ -101,6 +105,12 @@ def sqlQuestionOne():
             myConnection.commit()
     
     myCursor.executemany('INSERT INTO stores VALUES(?,?,?,?,?,?,?,?);',tempList)
+    myConnection.commit()
+    
+    # delete header from csv in sqlite database, db is reading in header row and is affecting
+    # haversine calculatino for sqlQuestionTwo
+    deleteHeaderSQL = """ DELETE FROM stores WHERE name = 'name' """
+    myCursor.execute(deleteHeaderSQL)
     myConnection.commit()
     # clean up
     myCursor.close()
@@ -145,6 +155,8 @@ def sqlQuestionTwo():
     
     iterator = 0
     tempCoord = list()
+    insertList = []
+    checkList = []
     while True: 
         rows = myCursor.fetchmany(5000)
         if not rows:
@@ -160,19 +172,47 @@ def sqlQuestionTwo():
                     lon2 = float(y[1]) 
                     #print str(y[0]) + str(y[1]) + " " + str(y[2])
                     dist = haversine(lon,lat,lon2,lat2)
-                    print dist
-                  
-                   
-
-                
-                
-       
-    # use haversine formula to calculate lat/lon within 100 miels based on min/max lat/lon
+                    if dist < 100.0:
+                        #print str(y[2]) + " is less than 100 miles from " + str(tempCoord[2])                  
+                        insertList.append(tuple([y[2],dist]))
+#                        checkList.append(tuple())
+#                        if len(insertList) % 5000 == 0:
+#                            myCursor.executemany('INSERT INTO nearbyStores VALUES(?,?,?);',tempList)
+#                            myConnection.commit()
+#                            tempList =[]
+#    myCursor.executemany('INSERT INTO nearbyStores VALUES(?,?,?);',tempList)
+#    myConnection.commit()
+#    print len(insertList)
     
-    # create new table using values of mcdonalds in NY and mc donalds within 100 miles
+    # delete the stores table if it already exists
+    deleteSQLNearby = """ DROP TABLE IF EXISTS nearbyStores """
+    myCursor.execute(deleteSQLNearby)
+    myConnection.commit()
+    myCursor.close()
+    # create table for mcdonalds distance            
+    createDistTableSQL = """ CREATE TABLE IF NOT EXISTS nearbyStores 
+                         (storeNumber integer,
+                         distance integer); """
+    myCursor = myConnection.cursor()
+    myCursor.execute(createDistTableSQL)    
+    myConnection.commit()          
+    
+    
+    # insert mcdonalds to database TODO
+    tempList =[]
+    for row in insertList:
+        tempList.append(tuple(row))
+        if len(tempList) % 5000 == 0:
+            myCursor.executemany('INSERT INTO nearbyStores VALUES(?,?);',tempList)
+            tempList =[]
+            myConnection.commit()
+    
+    myCursor.executemany('INSERT INTO nearbyStores VALUES(?,?);',tempList)
+    myConnection.commit()
     
     # cleanup
-    
+    myCursor.close()
+    myConnection.close()
 # haversine function calculates distance between two coordinate points
 def haversine(lon1,lat1, lon2, lat2):
     
@@ -187,7 +227,7 @@ def haversine(lon1,lat1, lon2, lat2):
     return c *r
     
 
-sqlQuestionTwo()
+#sqlQuestionTwo()
 
 
 def sqlQuestionThree():
