@@ -227,11 +227,13 @@ def haversine(lon1,lat1, lon2, lat2):
     return c *r
     
 
-#sqlQuestionTwo()
+sqlQuestionTwo()
+
 
 
 def sqlQuestionThree():
-    pass
+    print("SQL Question Three is shown below in commented format and used in sqlQuestionOne")
+
     #implemented in sqlQuestionOne
 #    for row in myReader:
 #        tempList.append(tuple(row))
@@ -248,4 +250,6 @@ def sqlQuestionThree():
 #    myFile.close()
 #    myReader = None
 
+
+sqlQuestionThree()
     

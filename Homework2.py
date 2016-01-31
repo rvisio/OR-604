@@ -18,13 +18,21 @@ soup = BeautifulSoup(myPage.content)
 # Store in stateURL List
 stateUrl = []
 storeUrlList = soup.select('.popular-cities-box li a')
+counter = 0
 for tags in storeUrlList:
+    if counter == 51:
+        break
     stateUrl.append(tags['href'])
+    counter += 1
 
+for state in stateUrl:
+    print state
 # iterate through state
 
 
+
 # iterate through stores within state
+
 
 # get state city store number and URL
 
