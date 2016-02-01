@@ -11,24 +11,35 @@ import random
 from math import * 
 dbName = ''
 
+#Create a simple function that takes two numbers and determines if the first number is evenly divisible by the second number.
+#Your function should return a Boolean value that indicates the result
 def questionOne(a,b):
     if a%b==0:
         return True
     return False
-    
+
+#Python 2:  Create function in Python that takes three numbers and determines which is the largest of the three.
+#Your function should return the number
 def questionTwo(a,b,c):
     return max(a,b,c)
-    
-def questionThree(a,b):
-    
-    """
-    binomial expansion one
-    """
 
+#Python 3:  Create a function in Python that prints out the coefficients (in order) for all terms of the kth binomial expansion.
+#Your function should accept as its argument the power by which the binomial is being expanded.
+def questionThree(n):
+   row = [1]
+   k = [0]
+   for x in range(n-1):
+      row=[l+r for l,r in zip(row+k,k+row)]
+   return row
+
+# Import the random module.  Write a procedure that takes two arguments (the upper limit “n” of a range of numbers,
+#and the number “k” of values to return) and returns “k” random elements from 0 to “n” without replacement.
 def questionFour(n,k):
     #for #i in range(0,k):
     print random.sample(range(n),k)
-    
+
+#Create a function that takes any two values (numbers or strings) and concatenates them (look it up).
+#Your function should return the concatenated string
 def questionFive(a,b):
     return (str(a) +str(b))
     
@@ -40,7 +51,10 @@ def questionSix():
 
     print("Question two using values 500, 6, 10000")
     print(questionTwo(500,6,10000))
-    
+
+    print("Question three using values n=5")
+    print(questionThree(5))
+
     print("Question Four using values n=50,k=50")
     print(questionFour(50,50))
     
@@ -48,6 +62,8 @@ def questionSix():
     print(questionFive(500,10000))
     print("Question five using values 'Cheers' and 'Mate'")
     print(questionFive( 'Cheers','Mate'))
+
+    print("Python Question Six Completed")
  
     
     
@@ -118,7 +134,7 @@ def sqlQuestionOne():
     myFile.close()
     myReader = None
     
-
+print("Running SQL Question One")
 sqlQuestionOne()
 
 def sqlQuestionTwo():
@@ -227,6 +243,7 @@ def haversine(lon1,lat1, lon2, lat2):
     return c *r
     
 
+print("Running SQL Question Two")
 sqlQuestionTwo()
 
 
@@ -241,7 +258,7 @@ def sqlQuestionThree():
 #            myCursor.executemany('INSERT INTO stores VALUES(?,?,?,?,?,?,?,?);',tempList)
 #            tempList =[]
 #            myConnection.commit()
-#    
+#
 #    myCursor.executemany('INSERT INTO stores VALUES(?,?,?,?,?,?,?,?);',tempList)
 #    myConnection.commit()
 #    # clean up
