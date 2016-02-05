@@ -7,7 +7,30 @@
 
 from bs4 import BeautifulSoup
 import requests
-import re
+import sqlite3
+
+#Deal with DB stuff
+dbName = 'dominos.db'
+myConnection = sqlite3.connect(dbName)
+myCursor = myConnection.cursor()
+
+# delete the stores table if it already exists
+deleteSQL = """ DROP TABLE IF EXISTS dominos """
+myCursor.execute(deleteSQL)
+myConnection.commit()
+myCursor.close()
+
+#create dominos table
+myCursor = myConnection.cursor()
+createTableSQL = """ CREATE TABLE IF NOT EXISTS dominos
+(state text,
+city text,
+url text,
+storeNumber integer); """
+myCursor.execute(createTableSQL)
+myConnection.commit()
+myCursor.close()
+
 
 # # Root dominos link to parse through
 rootUrl = 'http://www.menuism.com/restaurant-locations/dominos-pizza-7144'
@@ -17,17 +40,26 @@ soup = BeautifulSoup(myPage.content)
 # Get state urls from the root URL
 # Store in stateURL List
 stateUrl = []
-storeUrlList = soup.select('.popular-cities-box li a')
+stateUrlList = soup.select('.popular-cities-box li a')
 counter = 0
-for tags in storeUrlList:
+for tags in stateUrlList:
     if counter == 51:
         break
     stateUrl.append(tags['href'])
     counter += 1
 
+# Iterate through state URLS
+# Iterate through stores in each state
+currentState = ""
+soupyState = ""
+storeUrlList = []
 for state in stateUrl:
-    print state
-# iterate through state
+    currentState = requests.get(state)
+    soupyState = BeautifulSoup(currentState.content)
+    storeUrlList = soupyState.select('ul.list-unstyled-links a')
+
+    for store in storeUrlList:
+        print store
 
 
 
