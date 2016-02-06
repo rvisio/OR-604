@@ -8,13 +8,14 @@
 from bs4 import BeautifulSoup
 import requests
 import sqlite3
+import re
 
 #Deal with DB stuff
 dbName = 'dominos.db'
 myConnection = sqlite3.connect(dbName)
 myCursor = myConnection.cursor()
 
-# delete the stores table if it already exists
+# delete the dominos table if it already exists
 deleteSQL = """ DROP TABLE IF EXISTS dominos """
 myCursor.execute(deleteSQL)
 myConnection.commit()
@@ -53,19 +54,25 @@ for tags in stateUrlList:
 currentState = ""
 soupyState = ""
 storeUrlList = []
+storeNumber = 0
 for state in stateUrl:
     currentState = requests.get(state)
     soupyState = BeautifulSoup(currentState.content)
     storeUrlList = soupyState.select('ul.list-unstyled-links a')
 
     for store in storeUrlList:
-        print store
+        # get store number from URL
+        storeNumber = re.search(r'(?<=-)\d{1,8}', str(store))
+        try:
+            print storeNumber.group()
+        except:
+            print("Store number not acquired for store " + str(store))
+            pass
+        # get state from URL
+        storeState = re.search(r'', str(store))
 
 
 
-# iterate through stores within state
 
-
-# get state city store number and URL
 
 
