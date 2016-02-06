@@ -135,34 +135,85 @@ def questionTwo():
     myConnection = sqlite3.connect(dbName)
     myCursor = myConnection.cursor()
 
+    # Drop randomStores table if it already exists
+    deleteSQL = """ DROP TABLE IF EXISTS randomStores """
+    myCursor.execute(deleteSQL)
+    myConnection.commit()
+    myCursor.close()
     # Select ten random mcdonalds in state of NY
     # Create new table randomStores based off this query
+    myCursor = myConnection.cursor()
+
     randomStoresSQL = """ CREATE TABLE randomStores AS
                       SELECT * FROM stores WHERE state == 'NY' ORDER BY RANDOM() LIMIT 10;"""
     myCursor.execute(randomStoresSQL)
     myConnection.commit()
     myCursor.close()
 
-    # Dr C Code to
+    # Dr C Code to choose stores within 100 miles
+    myCursor = myConnection.cursor()
+    sqlString = """
+            SELECT tbl1.storeNumber, tbl1.lat, tbl1.lon, tbl2.storeNumber, tbl2.lat, tbl2.lon
+            FROM randomStores as tbl1, stores as tbl2
+            WHERE tbl1.state = 'NY'
+            AND tbl2.lat <= tbl1.lat + 1.5
+            AND tbl2.lat >= tbl1.lat - 1.5
+            AND tbl2.lon <= tbl1.lon + 2.5
+            AND tbl2.lon >= tbl1.lon - 2.5
+            """
+    myCursor.execute(sqlString)
+    myData = myCursor.fetchall()
+    # find stores exactly within 100 Miles and write them into the database
+    tempDist = []
+    for n, row in enumerate(myData):
+        distance = haversine(row[2], row[1], row[5], row[4])
+        if distance <=100:
+            tempDist.append((row[0], row[3], distance))
+
+
+     # Drop randomStores table if it already exists
+    myCursor = myConnection.cursor()
+
+    # Drop tblDistance if already exists
+    deleteSQL = """ DROP TABLE IF EXISTS tblDistance """
+    myCursor.execute(deleteSQL)
+    myConnection.commit()
+    sqlString = """
+                CREATE TABLE IF NOT EXISTS tblDistance
+                (FromStore  INT,
+                ToStore     INT,
+                DISTANCE    FLOAT)
+                """
+    myCursor.execute(sqlString)
+    myConnection.commit()
+
+    # Insert
+    sqlString = "INSERT INTO tblDistance VALUES (?,?,?)"
+    myCursor.executemany(sqlString, tempDist)
+    myConnection.commit()
+    tempDist = []
+    myCursor.close()
+    myConnection.close()
 
 
 
 
 
-
-
-# haversine function calculates distance between two coordinate points
-def haversine(lon1,lat1, lon2, lat2):
-
-    lon1,lat1,lon2,lat2= map(radians, [lon1,lat1,lon2,lat2])
-
-    dlon = lon2-lon1
-    dlat = lat2-lat1
-
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-    c = 2 * asin(sqrt(a))
-    r = 3956
-    return c *r
+def haversine(lon1, lat1, lon2, lat2):
+    """
+    Calculate the great circle distance between two points
+    on the earth (specified in decimal degrees).
+    Source: http://gis.stackexchange.com/a/56589/15183
+    """
+    # convert decimal degrees to radians
+    lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
+    # haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    km = (6367 * c) * 0.621371 # i translated this to miles but was too lazy to change the variable
+    return km
 
 
 questionTwo()
