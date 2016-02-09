@@ -243,79 +243,95 @@ def questionTwo():
     tempList =[]
     insertList = []
     count = 0
-    for randomStore in randomStoreList:
+    # for randomStore in randomStoreList:
+    #     tempList = []
+    #     insertList = []
+    #     for i in randomStore:
+    #         tempList.append(i)
+    #
+    #     time.sleep(.1)
+    #     gDistance = googleDistance(randomStore[1],randomStore[2],randomStore[4],randomStore[5])
+    #
+    #     tempList.append(gDistance)
+    #     insertList.append(tuple(tempList))
+    #     print insertList
+    #     tempList.append(tuple(finalTableList))
+    #     print tempList
+    #     print count
+    #     count += 1
+    #     FinalTableSQL = """ INSERT INTO FinalTable VALUES(?,?,?,?,?,?,?,?); """
+    #     myCursor.executemany(FinalTableSQL, insertList)
+    #     myConnection.commit()
+
+
+
+    #-------------------------------------------------------------
+    #Was trying to do iterate through each storeNumber and pass that to the SQL Statement
+    #Kept getting 'passing incorrect type' error or would run infinitely when passing tuple
+
+    myCursor = myConnection.cursor()
+    getNYStores = """ SELECT storeNumber from randomStores;"""
+    myCursor.execute(getNYStores)
+    randomStoreList = [] # list of random ny stores
+    while True:
+        rows = myCursor.fetchall()
+        if not rows:
+            break
+        else:
+            for store in rows:
+                print store
+                randomStoreList.append(store[0]) # lat/lon and store number
+    randomNearByList = []
+    for storeNum in randomStoreList:
+        print storeNum
+
+        x = str(storeNum)
+        getRandomNearByStoreSQL = """SELECT * FROM tblDistance WHERE FromStore == (?) ORDER BY RANDOM() LIMIT 25;"""
+
+        storeNum = (storeNum)
+        myCursor.execute(getRandomNearByStoreSQL, (x,))
+        while True:
+            rows = myCursor.fetchall()
+
+            if not rows:
+                print('here')
+                break
+            else:
+                for store in rows:
+                    print('for loop')
+                    print(store)
+                    randomNearByList.append(store)
+
+    # for item in randomNearByList:
+    #     print ('randomNearByList')
+    #     print item
+    finalTableList = []
+    tempList =[]
+    insertList = []
+    count = 0
+
+    print(len(randomNearByList))
+    for randomStore in randomNearByList:
         tempList = []
         insertList = []
+
         for i in randomStore:
             tempList.append(i)
-
         time.sleep(.1)
+
+        print(randomStore[1],randomStore[2],randomStore[4],randomStore[5])
+
         gDistance = googleDistance(randomStore[1],randomStore[2],randomStore[4],randomStore[5])
+
 
         tempList.append(gDistance)
         insertList.append(tuple(tempList))
-        print insertList
         tempList.append(tuple(finalTableList))
-        print tempList
         print count
         count += 1
         FinalTableSQL = """ INSERT INTO FinalTable VALUES(?,?,?,?,?,?,?,?); """
         myCursor.executemany(FinalTableSQL, insertList)
         myConnection.commit()
-
-
-
-    #-------------------------------------------------------------
-    # Was trying to do iterate through each storeNumber and pass that to the SQL Statement
-    # Kept getting 'passing incorrect type' error or would run infinitely when passing tuple
-
-    # myCursor = myConnection.cursor()
-    # getNYStores = """ SELECT storeNumber from randomStores;"""
-    # myCursor.execute(getNYStores)
-    # randomStoreList = [] # list of random ny stores
-    # while True:
-    #     rows = myCursor.fetchall()
-    #     if not rows:
-    #         break
-    #     else:
-    #         for store in rows:
-    #             randomStoreList.append(store[0]) # lat/lon and store number
-
-
-
-    # getRandomNearByStoreSQL = """SELECT * FROM tblDistance WHERE FromStore == (?) or FromStore = (?) or FromStore = (?)
-    #                               or FromStore = (?) or FromStore = (?) or FromStore = (?) or FromStore = (?) or
-    #                               FromStore = (?) or FromStore = (?) or FromStore = (?)
-    #                              ORDER BY RANDOM() LIMIT 25;"""
-    #
-    # myCursor.execute(getRandomNearByStoreSQL, (randomStoreList))
-    #
-    # while True:
-    #     rows = myCursor.fetchall()
-    #     if not rows:
-    #         break
-    #     else:
-    #         for store in rows:
-    #             print store
-    # for storeNum in randomStoreList:
-    #     print storeNum
-    #     randomNearByList = []
-    #     x = str(storeNum)
-    #     getRandomNearByStoreSQL = """SELECT * FROM tblDistance WHERE FromStore == (?) ORDER BY RANDOM() LIMIT 25;"""
-    #
-    #     storeNum = (storeNum)
-    #     myCursor.execute(getRandomNearByStoreSQL, (storeNum,))
-    #
-    #     while True:
-    #         rows = myCursor.fetchall()
-    #     if not rows:
-    #         break
-    #     else:
-    #         for store in rows:
-    #             randomNearByList.append(store)
-    #
-    # for item in randomNearByList:
-    #     print item
 
 
 def googleDistance(lat1,lon1,lat2,lon2):
