@@ -8,7 +8,7 @@
 from bs4 import BeautifulSoup
 from math import *
 import requests, sqlite3,re
-import json, urllib
+import json, urllib, time
 
 
 """1) Go to http://www.menuism.com/restaurant-locations and navigate to the Domino’s Pizza Locations.
@@ -198,14 +198,14 @@ def questionTwo():
     myCursor.executemany(sqlStringInsert, tempDist)
     myConnection.commit()
     tempDist = []
-    myCursor.close()
+
 
 
     # Select 250 random stores to calculate distnace from original (ten random stores) coordinates to destination
     # (25 of 250 stores)
 
     # Select 250 random stores in NY
-    myCursor = myConnection.cursor()
+
     getNYStores = """ SELECT * from tblDistance ORDER BY RANDOM() LIMIT 250;"""
     myCursor.execute(getNYStores)
     randomStoreList = [] # list of random ny stores
@@ -220,6 +220,8 @@ def questionTwo():
 #Save the following results in a datatable:  the two stores, each stores lat and lon, the haversine distance between the
 #two stores, and the route distance between the two stores """
     # Drop FinalTable if already exists
+
+    print('create final table')
     deleteSQL = """ DROP TABLE IF EXISTS FinalTable """
     myCursor.execute(deleteSQL)
     myConnection.commit()
@@ -237,10 +239,21 @@ def questionTwo():
     myCursor.execute(sqlString)
     myConnection.commit()
 
+    finalTableList = []
+    tempList =[]
+    count = 0
     for randomStore in randomStoreList:
 
-        googleDistance(randomStore[1],randomStore[2],randomStore[5],randomStore[6])
-        break
+        time.sleep(.1)
+        gDistance = googleDistance(randomStore[1],randomStore[2],randomStore[4],randomStore[5])
+        finalTableList.append(randomStore)
+        finalTableList.append(gDistance)
+        tempList.append(tuple(finalTableList))
+        print count
+        count += 1
+    FinalTableSQL = """ INSERT INTO FinalTable (?,?,?,?,?,?,?,?) """
+    myCursor.executemany(FinalTableSQL, tempList)
+    myConnection.commit()
 
 
 
@@ -298,18 +311,20 @@ def questionTwo():
 
 
 def googleDistance(lat1,lon1,lat2,lon2):
-    print("Entering Google Distance procedure")
-    orig_coord = str(lat1)+','+str(lon2)
+    orig_coord = str(lat1)+','+str(lon1)
     dest_coord = str(lat2)+','+str(lon2)
-    print orig_coord
-    print dest_coord
+
 
     url = 'http://maps.googleapis.com/maps/api/distancematrix/json?origins=%s'\
           '&destinations=%s&mode=driving&language=en-EN&sensor=false'\
            % (str(orig_coord), str(dest_coord))
     result= json.load(urllib.urlopen(url))
+    print result
+    driving_time = 0.0
     driving_time = result['rows'][0]['elements'][0]["distance"]['value']
-    print 'seconds:= ', driving_time
+    return str(int(driving_time) / 1000.0)
+
+
 def haversine(lat1,lon1,lat2,lon2):
 
     lon1,lat1,lon2,lat2= map(radians, [lon1,lat1,lon2,lat2])
