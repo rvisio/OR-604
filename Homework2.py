@@ -241,19 +241,27 @@ def questionTwo():
 
     finalTableList = []
     tempList =[]
+    insertList = []
     count = 0
     for randomStore in randomStoreList:
+        tempList = []
+        insertList = []
+        for i in randomStore:
+            tempList.append(i)
 
         time.sleep(.1)
         gDistance = googleDistance(randomStore[1],randomStore[2],randomStore[4],randomStore[5])
-        finalTableList.append(randomStore)
-        finalTableList.append(gDistance)
+
+        tempList.append(gDistance)
+        insertList.append(tuple(tempList))
+        print insertList
         tempList.append(tuple(finalTableList))
+        print tempList
         print count
         count += 1
-    FinalTableSQL = """ INSERT INTO FinalTable (?,?,?,?,?,?,?,?) """
-    myCursor.executemany(FinalTableSQL, tempList)
-    myConnection.commit()
+        FinalTableSQL = """ INSERT INTO FinalTable VALUES(?,?,?,?,?,?,?,?); """
+        myCursor.executemany(FinalTableSQL, insertList)
+        myConnection.commit()
 
 
 
