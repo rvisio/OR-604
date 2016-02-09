@@ -6,10 +6,10 @@
 #  - Loads the information into a database '''
 
 from bs4 import BeautifulSoup
-import requests
-import sqlite3
-import re
-import math
+from math import *
+import requests, sqlite3,re
+import json, urllib
+
 
 """1) Go to http://www.menuism.com/restaurant-locations and navigate to the Domino’s Pizza Locations.
 Write a Python script that does the following:
@@ -121,6 +121,7 @@ def questionOne():
         tempList=[]
         myConnection.commit()
         myCursor.close()
+#questionOne()
 
 """2) Use the results of your McDonald’s homework from Lesson 01 (the one that you find all McDonald’s within 100 miles of each McDonald’s in New York)
 to complete the following tasks in a Python Script:
@@ -128,7 +129,6 @@ to complete the following tasks in a Python Script:
     Determine route distance (in KM) for each pair of those McDonald’s (hint use google maps distance matrix)
 Save the following results in a datatable:  the two stores, each stores lat and lon, the haversine distance between the
 two stores, and the route distance between the two stores """
-#questionOne()
 def questionTwo():
     # connect to mcdonalds database
     dbName = 'mcD.db'
@@ -151,6 +151,8 @@ def questionTwo():
     myCursor.close()
 
     # Dr C Code to choose stores within 100 miles
+    # Changed table to randomStores (10 random new york stores)
+    # Will store all stores within 100 miles in tempDist, then insert into tblDistance
     myCursor = myConnection.cursor()
     sqlString = """
             SELECT tbl1.storeNumber, tbl1.lat, tbl1.lon, tbl2.storeNumber, tbl2.lat, tbl2.lon
@@ -163,12 +165,12 @@ def questionTwo():
             """
     myCursor.execute(sqlString)
     myData = myCursor.fetchall()
-    # find stores exactly within 100 Miles and write them into the database
+    # find stores exactly within 100 Miles and write them into the database tblDistance
     tempDist = []
     for n, row in enumerate(myData):
         distance = haversine(row[2], row[1], row[5], row[4])
         if distance <=100:
-            tempDist.append((row[0], row[3], distance))
+            tempDist.append((row[0],row[1],row[2], row[3],row[4],row[5], distance))
 
 
      # Drop randomStores table if it already exists
@@ -181,54 +183,146 @@ def questionTwo():
     sqlString = """
                 CREATE TABLE IF NOT EXISTS tblDistance
                 (FromStore  INT,
-                ToStore     INT,
-                DISTANCE    FLOAT)
+                fromLat FLOAT,
+                fromLon FLOAT,
+                ToStore INT,
+                toLat FLOAT,
+                toLon FLOAT,
+                Distance FLOAT)
                 """
     myCursor.execute(sqlString)
     myConnection.commit()
 
     # Insert
-    sqlString = "INSERT INTO tblDistance VALUES (?,?,?)"
-    myCursor.executemany(sqlString, tempDist)
+    sqlStringInsert = "INSERT INTO tblDistance VALUES (?,?,?,?,?,?,?)"
+    myCursor.executemany(sqlStringInsert, tempDist)
     myConnection.commit()
     tempDist = []
     myCursor.close()
-    myConnection.close()
+
+
+    # Select 250 random stores to calculate distnace from original (ten random stores) coordinates to destination
+    # (25 of 250 stores)
+
+    # Select 250 random stores in NY
+    myCursor = myConnection.cursor()
+    getNYStores = """ SELECT * from tblDistance ORDER BY RANDOM() LIMIT 250;"""
+    myCursor.execute(getNYStores)
+    randomStoreList = [] # list of random ny stores
+    while True:
+        rows = myCursor.fetchall()
+        if not rows:
+            break
+        else:
+            for store in rows:
+                randomStoreList.append(store) # lat/lon and store number
+
+#Save the following results in a datatable:  the two stores, each stores lat and lon, the haversine distance between the
+#two stores, and the route distance between the two stores """
+    # Drop FinalTable if already exists
+    deleteSQL = """ DROP TABLE IF EXISTS FinalTable """
+    myCursor.execute(deleteSQL)
+    myConnection.commit()
+    sqlString = """
+                CREATE TABLE IF NOT EXISTS FinalTable
+                (FromStore  INT,
+                fromLat FLOAT,
+                fromLon FLOAT,
+                ToStore INT,
+                toLat FLOAT,
+                toLon FLOAT,
+                HDistance FLOAT,
+                GDistance FLOAT)
+                """
+    myCursor.execute(sqlString)
+    myConnection.commit()
+
+    for randomStore in randomStoreList:
+
+        googleDistance(randomStore[1],randomStore[2],randomStore[5],randomStore[6])
+        break
 
 
 
+    #-------------------------------------------------------------
+    # Was trying to do iterate through each storeNumber and pass that to the SQL Statement
+    # Kept getting 'passing incorrect type' error or would run infinitely when passing tuple
+
+    # myCursor = myConnection.cursor()
+    # getNYStores = """ SELECT storeNumber from randomStores;"""
+    # myCursor.execute(getNYStores)
+    # randomStoreList = [] # list of random ny stores
+    # while True:
+    #     rows = myCursor.fetchall()
+    #     if not rows:
+    #         break
+    #     else:
+    #         for store in rows:
+    #             randomStoreList.append(store[0]) # lat/lon and store number
 
 
-def haversine(lon1, lat1, lon2, lat2):
-    """
-    Calculate the great circle distance between two points
-    on the earth (specified in decimal degrees).
-    Source: http://gis.stackexchange.com/a/56589/15183
-    """
-    # convert decimal degrees to radians
-    lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
-    # haversine formula
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-    c = 2 * math.asin(math.sqrt(a))
-    km = (6367 * c) * 0.621371 # i translated this to miles but was too lazy to change the variable
-    return km
 
+    # getRandomNearByStoreSQL = """SELECT * FROM tblDistance WHERE FromStore == (?) or FromStore = (?) or FromStore = (?)
+    #                               or FromStore = (?) or FromStore = (?) or FromStore = (?) or FromStore = (?) or
+    #                               FromStore = (?) or FromStore = (?) or FromStore = (?)
+    #                              ORDER BY RANDOM() LIMIT 25;"""
+    #
+    # myCursor.execute(getRandomNearByStoreSQL, (randomStoreList))
+    #
+    # while True:
+    #     rows = myCursor.fetchall()
+    #     if not rows:
+    #         break
+    #     else:
+    #         for store in rows:
+    #             print store
+    # for storeNum in randomStoreList:
+    #     print storeNum
+    #     randomNearByList = []
+    #     x = str(storeNum)
+    #     getRandomNearByStoreSQL = """SELECT * FROM tblDistance WHERE FromStore == (?) ORDER BY RANDOM() LIMIT 25;"""
+    #
+    #     storeNum = (storeNum)
+    #     myCursor.execute(getRandomNearByStoreSQL, (storeNum,))
+    #
+    #     while True:
+    #         rows = myCursor.fetchall()
+    #     if not rows:
+    #         break
+    #     else:
+    #         for store in rows:
+    #             randomNearByList.append(store)
+    #
+    # for item in randomNearByList:
+    #     print item
+
+
+def googleDistance(lat1,lon1,lat2,lon2):
+    print("Entering Google Distance procedure")
+    orig_coord = str(lat1)+','+str(lon2)
+    dest_coord = str(lat2)+','+str(lon2)
+    print orig_coord
+    print dest_coord
+
+    url = 'http://maps.googleapis.com/maps/api/distancematrix/json?origins=%s'\
+          '&destinations=%s&mode=driving&language=en-EN&sensor=false'\
+           % (str(orig_coord), str(dest_coord))
+    result= json.load(urllib.urlopen(url))
+    driving_time = result['rows'][0]['elements'][0]["distance"]['value']
+    print 'seconds:= ', driving_time
+def haversine(lat1,lon1,lat2,lon2):
+
+    lon1,lat1,lon2,lat2= map(radians, [lon1,lat1,lon2,lat2])
+
+    dlon = lon2-lon1
+    dlat = lat2-lat1
+
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    r = 3956
+    return c *r
 
 questionTwo()
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
