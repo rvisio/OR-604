@@ -70,7 +70,7 @@ def questionOne():
         for store in storeUrlList:
             # get store number from URL
             storeNumber = re.search(r'(?<=-)\d{1,8}', str(store))
-            print store
+            #print store
             try:
                 storeNumber = storeNumber.group()
                 #print ("Store number is " + storeNumber)
@@ -94,21 +94,21 @@ def questionOne():
 
             # get URL
             storeURL = store['href']
-            print "For Store URL " + storeURL
-            print "Store number is " + storeNumber
-            print "City is equal to " + city
-            print "State is equal to " + state
+            #print "For Store URL " + storeURL
+            #print "Store number is " + storeNumber
+            #print "City is equal to " + city
+            #print "State is equal to " + state
 
             #Insert values into database
             tempList.append((storeURL,storeNumber,city,state))
 
-            print len(tempList)
+            #print len(tempList)
             # Check if templist divisible by 5000
             if len(tempList) % 5000 == 0:
                 myCursor = myConnection.cursor()
-                print 'len of templist is divisble by 5000'
+                #print 'len of templist is divisble by 5000'
                 myCursor = myConnection.cursor()
-                myCursor.executemany('INSERT INTO dominos VALUES(?,?,?,?);',list)
+                myCursor.executemany('INSERT INTO dominos VALUES(?,?,?,?);',tempList)
                 tempList =[]
                 myConnection.commit()
                 myCursor.close()
@@ -116,12 +116,12 @@ def questionOne():
     #final check on templist insert stragglers
     if len(tempList) > 0:
         myCursor = myConnection.cursor()
-        print 'finished looping still some left in tempList to insert into database'
+        #print 'finished looping still some left in tempList to insert into database'
         myCursor.executemany('INSERT INTO dominos VALUES(?,?,?,?);',tempList)
         tempList=[]
         myConnection.commit()
         myCursor.close()
-#questionOne()
+questionOne()
 
 """2) Use the results of your McDonald’s homework from Lesson 01 (the one that you find all McDonald’s within 100 miles of each McDonald’s in New York)
 to complete the following tasks in a Python Script:
@@ -206,16 +206,16 @@ def questionTwo():
 
     # Select 250 random stores in NY
 
-    getNYStores = """ SELECT * from tblDistance ORDER BY RANDOM() LIMIT 250;"""
-    myCursor.execute(getNYStores)
-    randomStoreList = [] # list of random ny stores
-    while True:
-        rows = myCursor.fetchall()
-        if not rows:
-            break
-        else:
-            for store in rows:
-                randomStoreList.append(store) # lat/lon and store number
+##    getNYStores = """ SELECT * from tblDistance ORDER BY RANDOM() LIMIT 250;"""
+##    myCursor.execute(getNYStores)
+##    randomStoreList = [] # list of random ny stores
+##    while True:
+##        rows = myCursor.fetchall()
+##        if not rows:
+##            break
+##        else:
+##            for store in rows:
+##                randomStoreList.append(store) # lat/lon and store number
 
 #Save the following results in a datatable:  the two stores, each stores lat and lon, the haversine distance between the
 #two stores, and the route distance between the two stores """
