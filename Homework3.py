@@ -104,20 +104,23 @@ def questionOne():
 
             storeURL = store['href']
             currentStore = requests.get(storeURL)
-            coordPage = SoupStrainer('div', class_='map-avatar')
+            #coordPage = SoupStrainer('div', class_='map-avatar')
+            coordPage = SoupStrainer('div', class_='lazy map-background')
+
             soupyStore = BeautifulSoup(currentStore.content, "lxml", parse_only=coordPage,) # Stack Overflow said lxml parser would speed up performance
+            print soupyStore
 
             #storeCoord = soupyStore.find_all('div',class_='map-avatar', attrs={'data-bg'})
             storeCoord = soupyStore.find_all(coordPage)
 
             # regex to get lat (?<=lat=)\d*.\d*
             # regex to get lon (?<=lng=).\d*.\d*
-            latReg = re.search(r'(?<=lat=)\d*.\d*', str(storeCoord))
+            latReg = re.search(r'(?<=lat=).\d*.\d*', str(storeCoord))
 
             # Some issues with pages not having lat/lng, need to perform error handling
             try:
                 storeLat = latReg.group()
-                #print storeLat
+                print storeLat
                 if storeLat.__contains__('&'):
                     storeLat = 0.0
             except:
@@ -126,7 +129,7 @@ def questionOne():
             lngReg = re.search(r'(?<=lng=).\d*.\d*', str(storeCoord))
             try:
                 storeLng = lngReg.group()
-               # print storeLng
+                print storeLng
                 if storeLng.__contains__('&'):
                     storeLng = 0.0
             except:
