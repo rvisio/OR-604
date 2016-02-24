@@ -6,6 +6,7 @@ from math import *
 # Set up db stuff
 dbName = 'hw_four.db'
 myConnection = sqlite3.connect(dbName)
+myConnection.text_factory = str #fixes some bullshit unicode error that was messing up setting up constraints
 myCursor = myConnection.cursor()
 
 
@@ -89,9 +90,10 @@ myFile.close
 #     tempRow = (row[1],row[2])
 #     tempList.append(tuple(tempRow))
 #     if len(tempList) % 5000 == 0:
+#         print('inserting 5 k')
 #         myCursor.executemany('INSERT INTO storeDemand VALUES(?,?);',tempList)
-#         tempList =[]
 #         myConnection.commit()
+#         tempList =[]
 #         tempRow = []
 #
 #     tempRow =[]
@@ -99,8 +101,8 @@ myFile.close
 # if len(tempList) > 0 :
 #     print('inserting remainder')
 #     myCursor.executemany('INSERT INTO storeDemand VALUES(?,?);',tempList)
-#     tempList =[]
 #     myConnection.commit()
+#     tempList =[]
 #     tempRow = []
 # myFile.close
 #
@@ -159,11 +161,11 @@ myConnection.commit()
 
 #Create table for distribution tables
 createDistSQL = """ CREATE TABLE IF NOT EXISTS distCenters
-                      (ID INTEGER,
+                      (ID TEXT,
                       address text,
                         lat FLOAT,
                         long FLOAT,
-                        weeklyCapacity FLOAT,
+                        weeklyCapacity INTEGER,
                         dailyCapacity FLOAT,
                         CostPerMile FLOAT); """
 myCursor.execute(createDistSQL)
@@ -211,7 +213,8 @@ storeToDistSQL = """CREATE TABLE IF NOT EXISTS distToStore
                  (Dist INTEGER,
                  ToStore INTEGER,
                  Distance FLOAT,
-                 CostOfTravel FLOAT)"""
+                 CostOfTravel FLOAT,
+                 PricePerDough FLOAT)"""
 myCursor.execute(storeToDistSQL)
 myConnection.commit()
 
@@ -235,8 +238,9 @@ tempList = []
 tempRow = []
 costOfTrip = 0.0
 distCost = 0.0
+pricePerDough = 0.0
 for currentDist in distCenters:
-    print currentDist
+    #print currentDist
     distLat = float(currentDist[2])
     distLong = float(currentDist[3])
     distCost = float(currentDist[6])
@@ -248,19 +252,20 @@ for currentDist in distCenters:
         hDistance = haversine(curStoreLat,curStoreLong, distLat, distLong)
         #print 'haversine for dist center ' + str(distNumber) + ' to dominos store ' + str(currentStoreNumber) + ' is ' +  str(hDistance)
         costOfTrip = distCost * hDistance
-        tempRow = (distNumber, currentStoreNumber, hDistance, costOfTrip)
+        pricePerDough = costOfTrip / 9900
+        tempRow = (distNumber, currentStoreNumber, hDistance, costOfTrip, pricePerDough)
         tempList.append(tuple(tempRow))
 
         tempRow =[]
         if len(tempList) % 5000 == 0:
 
-            myCursor.executemany('INSERT INTO distToStore VALUES(?,?,?,?);',tempList)
+            myCursor.executemany('INSERT INTO distToStore VALUES(?,?,ROUND(?,2),ROUND(?,2),ROUND(?,2));',tempList)
             tempList =[]
             myConnection.commit()
             tempRow = []
 
     if len(tempList)> 0:
-        myCursor.executemany('INSERT INTO distToStore VALUES(?,?,?,?);',tempList)
+        myCursor.executemany('INSERT INTO distToStore VALUES(?,?,ROUND(?,2),ROUND(?,2),ROUND(?,2));',tempList)
         tempList =[]
         myConnection.commit()
         tempRow = []
@@ -279,8 +284,201 @@ for currentDist in distCenters:
 #--------------------------------------------------------
 # stores receive minimum supply of dough (minimum supply = demand)
 #
-# zaModel = Model()
-# zaModel.modelSense = GRB.M
+
+# Cost of shipping from dist i to store j
+# variable = number of doughs
+#-------------------------------------------------------------------------------------------------
+#Indexes
+
+#Distribution Center Index
+tempDC = []
+for i in distCenters:
+    tempDC.append(i[0])
+DC = tuple(tempDC)
+
+#Store Number Index
+tempStoreList = []
+for i in storeInfo:
+    tempStoreList.append(i[0])
+storeList = tuple(tempStoreList)
+#-------------------------------------------------------------------------------------------------
+
+# CostPerDough Dictionary
+storesSQL = """SELECT * from distToStore"""
+myCursor.execute(storesSQL)
+distInfo = myCursor.fetchall()
+
+costPerDough = {}
+for i in distInfo:
+    costPerDough[i[0],i[1]] = (i[4])
+
+# Minimum Demand Per Store
+MinStoreDemand = {}
+storesSQL = """SELECT * from avgStoreDemand"""
+myCursor.execute(storesSQL)
+avgStoreInfo = myCursor.fetchall()
+for i in avgStoreInfo:
+    MinStoreDemand[i[0]] = (i[2])
+
+# Maximum Capacity Per Distribution Center
+DCLimit = {}
+for i in distCenters:
+    temp = i[4]
+   # print temp
+    temp = str(temp)
+ #   print temp
+    temp = temp.replace(',', '')
+ #   print temp
+    temp = int(temp)
+    #print temp
+    #print '-------------'
+    DCLimit[i[0]] = (long(temp))
+
+# for i in DCLimit:
+#     print '____________________'
+#     print type(i)
+#     print DCLimit[i]
+
+
+
+
+#Create distance matrix dictionary
+#populate it with values from distribution center to store database
+# costMatrix = {}
+# for current in distInfo:
+#    #print current
+#     costMatrix[current[0],current[1]] = (float(current[3]),float(current[4]))
+
+zaModel = Model()
+zaModel.modelSense = GRB.MINIMIZE
+zaModel.update()
+
+# Add in variables
+# Our variable is number of doughs to ship to a store from a distribution center
+
+dough = {}
+for route in costPerDough:
+    #print costPerDough[route]
+    #print route
+    #print costPerDough[route]*9900
+    try:
+        #print route[0]
+        dough[route] = zaModel.addVar(obj= costPerDough[route],
+                                  name = '%s_%s_dough' % (str(route[0]),str(route[1])))
+        #dough[route] = zaModel.addVar(obj= cost)
+        pass
+    except KeyError:
+        pass
+
+zaModel.update()
+
+#Adds in the cost of traveling from distribution center to store as
+# Variable is the number of doughs shipped
+
+
+# edgeCost = {}
+# for dc,store in costMatrix:
+#     edgeCost[dc,store] = zaModel.addVar(obj=costMatrix[dc,store][1],
+#                                         name='cost_from_%s_to_%s' % (dc,store))
+#
+# zaModel.update()
+#
+# #Create constraints dictionary
+constraints = {}
+#
+# # First Constraint is the capacity available in each distribution center
+# # Pull capacity from distCenters table distCenter[4]
+# # distCenter[4] must be <=
+#
+# # Create Distribution center Dictionary
+distCentersConstrSQL = """SELECT * from distCenters"""
+myCursor.execute(distCentersConstrSQL)
+distConstr = myCursor.fetchall()
+dist = {}
+for center in distConstr:
+    insertVar = center[4]
+    insertVar = insertVar.replace(',','')
+    dist[center[0]] = (center[4].replace(',',''))
+#
+# print
+# # Create Store Dictionary
+# # storesSQL = """SELECT * from avgStoreDemand"""
+# # myCursor.execute(storesSQL)
+# # avgStoreInfo = myCursor.fetchall()
+# # avgStoreDemand = {}
+# # for store in avgStoreInfo:
+# #     avgStoreDemand[store[0]] = (float(store[2])) #stores weekly demand as float
+#
+#
+#
+for center in dist:
+    #print center
+    constrName = '%s_Center_Supply' % center
+    #print constrName
+
+    limit = dist[center[0]]
+    # print type(limit)
+    #print limit
+    limit = int(limit)
+    # print '-0o0-4353453'
+    # print limit
+    # print limit
+    # print type(limit)
+   # print dist[center][0]
+
+    constraints[constrName] = zaModel.addConstr((quicksum(dough[int(center), int(store)]
+                                                         for store in MinStoreDemand)* 9900) * 7 <= limit,
+                                                name = constrName)
+
+zaModel.update()
+#
+# # Second Constraint is the demand created by each store
+# # The supply sent to the store must match the weekly demand the store has
+# # Weekly demand is pulled from avgStoreDemand[2]
+#
+for store in MinStoreDemand:
+    #print avgStoreDemand[str(store)[0]]
+    #print type(store)
+    constrName = '%s_demand' % store
+    # print store
+    # print avgStoreDemand[store]
+
+    minimumNeeded = int(MinStoreDemand[store])
+    # print '--------------'
+    # print minimumNeeded
+    #minimumNeeded = minimumNeeded
+    total = costPerDough[int(center),int(store)]
+    #print minimumNeeded
+
+    constraints[store] = zaModel.addConstr((quicksum(dough[int(center),int(store)]
+                                                  for center in dist) * 9900)* 7 >= minimumNeeded,
+                                         name = constrName)
+
+zaModel.update()
+zaModel.write('za.lp')
+zaModel.optimize()
+
+DROPTABLESQL = """DROP TABLE IF EXISTS Answer"""
+myCursor.execute(DROPTABLESQL)
+myConnection.commit()
+
+SQLSTRING = """CREATE TABLE IF NOT EXISTS Answer (DistCenterToStore TEXT, EX TEXT)"""
+myCursor.execute(SQLSTRING)
+myConnection.commit()
+
+tempList = []
+if zaModel.Status == GRB.OPTIMAL:
+    for e in dough:
+        if dough[e].x > 0:
+            print e, dough[e].x
+            val = (str(e),str(dough[e].x))
+            tempList.append(val)
+
+myCursor.executemany('INSERT INTO Answer VALUES(?,?);',tempList)
+myConnection.commit()
+
+
+
 
 
 
