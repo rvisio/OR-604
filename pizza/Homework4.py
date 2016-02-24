@@ -116,8 +116,8 @@ myFile.close
 #start = timeit.default_timer()
 #SLOW AF
 #code to average
-# print ('about to run avgStoreDemand')
-#
+# print ('about to run avgStoreDemand
+
 # avgSQL = """  insert INTO avgStoreDemand
 #                 SELECT storeNumber, AVG(demand)
 #                 from storeDemand
