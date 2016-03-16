@@ -259,13 +259,13 @@ for currentDist in distCenters:
         tempRow =[]
         if len(tempList) % 5000 == 0:
 
-            myCursor.executemany('INSERT INTO distToStore VALUES(?,?,ROUND(?,2),ROUND(?,2),ROUND(?,2));',tempList)
+            myCursor.executemany('INSERT INTO distToStore VALUES(?,?,ROUND(?,2),ROUND(?,2),?);',tempList)
             tempList =[]
             myConnection.commit()
             tempRow = []
 
     if len(tempList)> 0:
-        myCursor.executemany('INSERT INTO distToStore VALUES(?,?,ROUND(?,2),ROUND(?,2),ROUND(?,2));',tempList)
+        myCursor.executemany('INSERT INTO distToStore VALUES(?,?,ROUND(?,2),ROUND(?,2),?);',tempList)
         tempList =[]
         myConnection.commit()
         tempRow = []
@@ -323,16 +323,16 @@ for i in avgStoreInfo:
 # Maximum Capacity Per Distribution Center
 DCLimit = {}
 for i in distCenters:
-    temp = i[4]
+    #temp = i[4]
    # print temp
-    temp = str(temp)
+
+ #  # print temp
+    #temp = temp.replace(',', '')
  #   print temp
-    temp = temp.replace(',', '')
- #   print temp
-    temp = int(temp)
+    #temp = int(temp)
     #print temp
     #print '-------------'
-    DCLimit[i[0]] = (long(temp))
+    DCLimit[i[0]] = (int(i[4]))
 
 # for i in DCLimit:
 #     print '____________________'
@@ -368,9 +368,11 @@ for route in costPerDough:
         #dough[route] = zaModel.addVar(obj= cost)
         pass
     except KeyError:
-        pass
+        dough[route] = zaModel.addVar(obj=175*3,
+                                      name = '%s_%s_dough' % (str(route[0]), str(route[1])))
 
 zaModel.update()
+
 
 #Adds in the cost of traveling from distribution center to store as
 # Variable is the number of doughs shipped
@@ -397,8 +399,8 @@ distConstr = myCursor.fetchall()
 dist = {}
 for center in distConstr:
     insertVar = center[4]
-    insertVar = insertVar.replace(',','')
-    dist[center[0]] = (center[4].replace(',',''))
+    #insertVar = insertVar.replace(',','')
+    dist[center[0]] = (insertVar)
 #
 # print
 # # Create Store Dictionary
@@ -427,7 +429,7 @@ for center in dist:
    # print dist[center][0]
 
     constraints[constrName] = zaModel.addConstr((quicksum(dough[int(center), int(store)]
-                                                         for store in MinStoreDemand)* 9900) * 7 <= limit,
+                                                         for store in MinStoreDemand)* 9900) * 3 <= limit,
                                                 name = constrName)
 
 zaModel.update()
@@ -451,7 +453,7 @@ for store in MinStoreDemand:
     #print minimumNeeded
 
     constraints[store] = zaModel.addConstr((quicksum(dough[int(center),int(store)]
-                                                  for center in dist) * 9900)* 7 >= minimumNeeded,
+                                                  for center in dist) * 9900)* 3 >= minimumNeeded,
                                          name = constrName)
 
 zaModel.update()
@@ -462,19 +464,22 @@ DROPTABLESQL = """DROP TABLE IF EXISTS Answer"""
 myCursor.execute(DROPTABLESQL)
 myConnection.commit()
 
-SQLSTRING = """CREATE TABLE IF NOT EXISTS Answer (DistCenterToStore TEXT, EX TEXT)"""
+SQLSTRING = """CREATE TABLE IF NOT EXISTS Answer (Dist TEXT, Store TEXT, EX TEXT)"""
 myCursor.execute(SQLSTRING)
 myConnection.commit()
 
+tempDC = ""
+tempStore = ""
 tempList = []
 if zaModel.Status == GRB.OPTIMAL:
     for e in dough:
         if dough[e].x > 0:
+
             print e, dough[e].x
-            val = (str(e),str(dough[e].x))
+            val = (str(e[0]),str(e[1]),str(dough[e].x))
             tempList.append(val)
 
-myCursor.executemany('INSERT INTO Answer VALUES(?,?);',tempList)
+myCursor.executemany('INSERT INTO Answer VALUES(?,?,?);',tempList)
 myConnection.commit()
 
 

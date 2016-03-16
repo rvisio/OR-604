@@ -19,14 +19,16 @@ def haversine(lat1,lon1,lat2,lon2):
 
 #Problem 1
 # Re-do homework 4 (assigning stores to dist centers)
-# 3 days worth of demand ( stores getting supplied twice a week), cut dist center supply in half
-# If a store is missing from the Demand data, give it avg value of 175
+# 3 days worth of demand ( stores getting supplied twice a week), cut dist center supply in half -- complete
+# If a store is missing from the Demand data, give it avg value of 175 -- complete
 # Each store can only be supplied by a single dist center
+
+# Started this hw too late -- did not leave enough time
 
 
 
 # set up db
-dbName = 'hw5.db'
+dbName = 'hw6.db'
 myConnection = sqlite3.connect(dbName)
 myCursor = myConnection.cursor()
 
@@ -104,7 +106,7 @@ distToStore = pd.DataFrame(insertList, columns= ["DistCenter", "StoreNumber","Di
 # Distribution Centers
 distCenters = {}
 for i in distDF.itertuples():
-    distCenters[i[1]] = int(i[5])
+    distCenters[i[1]] = int(i[5]/2.0) # cutting supply in half per hw reqs
 
 # Domino Stores
 domStores = {}
@@ -121,19 +123,132 @@ zaModel = Model()
 zaModel.modelSense = GRB.MINIMIZE
 zaModel.update()
 
+# Variable for cost of shipping from dist center to store
 dough = {}
 for dist, store in costMatrix:
-    dough[dist,store] = zaModel.addVar(vtype = GRB.BINARY,
-                                       obj = costMatrix[dist,store] * domStores[store],
+    dough[dist,store] = zaModel.addVar(obj = costMatrix[dist,store] * domStores[store],
                                        name = 'Dough_%s_%s' % (dist,store))
+zaModel.update()
+
+# Variable for making sure that only one dist center ships to store
+# don't understand how to create this binary variable yet
+# current set up of model may be limiting me from properly creating it
+# OnlyDough = {}
+# for dist, store in costMatrix:
+#     OnlyDough[dist,store] = zaModel.addVar(vtype = GRB.BINARY, obj=)
+constraints = {}
+
+# Dist Center Constraint
+for dist in distCenters:
+    constrName = '%s_DistCenter_supply' % str(dist)
+    limit = distCenters[dist]
+    limit = int(limit)
 
 
-
-myConstrs = {}
-
-for
+    constraints[constrName] = zaModel.addConstr((quicksum(dough[int(dist), int(store)]
+                                                         for store in domStores)) <= limit,
+                                                name = constrName)
 
 zaModel.update()
 
+# Store Demand Constraint
+
+for store in domStores:
+    constrName = '%s_DistCenter_supply' % str(store)
+
+    minimumNeeded = int(domStores[store])
+
+    constraints[constrName] = zaModel.addConstr((quicksum(dough[int(center),int(store)]
+                                                  for center in distCenters)) >= minimumNeeded,
+                                         name = constrName)
+
+zaModel.update()
 zaModel.write('za.lp')
 zaModel.optimize()
+
+tempList = []
+if zaModel.Status == GRB.OPTIMAL:
+    for e in dough:
+        if dough[e].x > 0:
+            print e, dough[e].x
+            dc = e[0]
+            toStore = e[1]
+            print dc, toStore
+            val = (dc, toStore,float(dough[e].x))
+            tempList.append(val)
+
+#optimalDF = pd.DataFrame.from_dict(tempList)
+#,columns=['DC', 'ToStore', 'Weird_Gurobi_Metric']
+col =['DC','ToStore','Weird_Gurobi_metric']
+optimalDF = pd.DataFrame(tempList, col)
+# optimalDF.reset_index(level=0,inplace=True)
+# optimalDF.reset_index()
+print type(tempList)
+print optimalDF.head()
+
+
+print "HERE ========================"
+for i in optimalDF:
+    print i
+
+
+#
+#
+# #-----------------------------------------------------------------------------------------
+# # Problem 2
+# # Determine amount of flour each dist center needs every 3 days
+# # Reduce Ardent Mills capacity by half
+# # Each Dist Center can only be supplied by only one mill -- probably wont solve this
+# # Set up cost of 3 million for each ardent mill set up
+# #-----------------------------------------------------------------------------------------
+#
+# # Read in the Ardent Mills csv
+# print ('------------------on to problem 2 :) ----------------------')
+# ardentMills = pd.read_csv("ArdentMills.csv", low_memory=False)
+#
+# # Indexes
+# # Distribution Centers
+# distCenters = {}
+# for i in distDF.itertuples():
+#     distCenters[i[1]] = int(i[5]/2.0) # cutting supply in half per hw reqs
+#
+# # Domino Stores
+# domStores = {}
+# for i in demandData.itertuples():
+#     domStores[i[1]] = int(i[3])
+#
+# #Mills
+# mills = {}
+# for i in ardentMills.itertuples():
+#     #index             cost per unit            supply halved
+#     mills[i[0]+1] = float(i[6]), int(i[7])
+# # Gets supply needed from dist ceter to store
+# supplyMatrix = {}
+# counter = 0
+# print optimalDF.head()
+# for i in optimalDF.itertuples():  # just wasted 40 minutes because i forgot itertuples()
+#     supplyMatrix[int(i[1]),int(i[2])] = domStores[int(i[2])]
+#
+# flourModel = Model()
+# flourModel.modelSense = GRB.MINIMIZE
+# flourModel.update()
+#
+# # Determine total demand each distribution center is shipping to
+#
+# flour = {}
+#     #
+#     # flour[i[0],i[1]] = flourModel.addVar(obj = supplyMatrix[int(i[0]),int(i[1])],
+#     #                                    name = 'Dough_%s_%s' % (str(i[0]),str(i[1])))
+# flourModel.update()
+#
+# # Charge of 3 million for when
+# # Charges={}
+# # for mill in mills:
+# #     Charges[mill] = flourModel.addVar(vtype=GRB.BINARY, obj = 3000000,
+# #                                       name = 'MillCharge_%s' % mill)
+#
+# flourModel.update()
+#
+# # Add constraint to stay below mill supply
+#
+# # Add constraint to meet store demand

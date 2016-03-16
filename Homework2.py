@@ -79,6 +79,7 @@ def questionOne():
                 pass
 
             # get City and Stat from URL
+            print storeCityState
             storeCityState = re.search(r'(?<=in\s)\D*(?=-)', str(store))
             try:
                 cityState = storeCityState.group()
