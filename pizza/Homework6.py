@@ -2,6 +2,12 @@ import csv, sqlite3
 from math import *
 from operator import itemgetter
 
+import UtilAPI as u
+
+import json, urllib
+
+import time
+
 # Set up sqlite db
 dbName = 'hw_four.db'
 myConnection = sqlite3.connect(dbName)
@@ -23,6 +29,23 @@ def haversine(lat1, lon1, lat2, lon2):
     r = 3956
     return c * r
 
+# Returns list of google driving distance and driving time
+key = u.getAPIKey()     # returns my google maps api key
+def googleAPI(lat1, lon1, lat2, lon2):
+    orig_coord = str(lat1) + ',' + str(lon1)
+    dest_coord = str(lat2) + ',' + str(lon2)
+
+    url = 'https://maps.googleapis.com/maps/api/distancematrix/json?origins=%s'\
+          '&destinations=%s&mode=driving&language=en-EN&sensor=false&key=%s'\
+           % (str(orig_coord), str(dest_coord), str(key))
+
+    result= json.load(urllib.urlopen(url))
+
+    # Distance in meters and duration of driving in seconds
+    distanceMeters = result['rows'][0]['elements'][0]['distance']['value']
+    durationSeconds = result['rows'][0]['elements'][0]['duration']['value']
+
+    return [distanceMeters * 0.00062137, durationSeconds*60]
 
 # Using answer from hw4 select all stores that have dc 5 has distribution center
 answerSQL = "SELECT * FROM Answer"
@@ -75,10 +98,15 @@ storeBearing = []
 
 demandSQL = """SELECT * FROM avgStoreDemand WHERE storeNumber == (?)"""
 storeCoordDict = {}
+
+apiKey = u.getAPIKey()
+
 for i in storeLoc:
     # TODO
     # Update haversine distance to google maps api
-    hDistance = haversine(dcLat, dcLon, storeLoc[i][0], storeLoc[i][1])
+    googleList = googleAPI(dcLat,dcLon,  storeLoc[i][0],storeLoc[i][1])
+    print googleList
+    #hDistance = haversine(dcLat, dcLon, storeLoc[i][0], storeLoc[i][1])
     storeCoordDict[i] = storeLoc[i][0], storeLoc[i][1]
     # Calculate  bearing
     y = sin(storeLoc[i][1] - dcLon) * cos(storeLoc[i][0])
@@ -95,15 +123,20 @@ for i in storeLoc:
             break
         else:
             for x in rows:
-                doughDemand = float(x[2])
+                zaDemand = float(x[2])
 
     # TODO
-    # Determine number of product palletes
-    # Lets just assume product pallets is 1/2 of dough pallets
+    # Verify if pallete calculation is correct
 
-    doughPallets = ceil(doughDemand / 180)
-    productPallets = ceil(doughPallets * 2)
-    tempList = [int(i), bearing, hDistance, int(productPallets), int(doughPallets)]
+    thinCrust = ceil(zaDemand*3*.15/60/6)*8
+    cheese = ceil(zaDemand*3 * 2.25 / 4 / 14 / 12)*5.5
+    sauce = ceil(zaDemand * 3* 1.5/2/42/10)*7.5
+
+    productPalletes = ceil((thinCrust+cheese+sauce)/60)
+    doughPallets = ceil((zaDemand / (zaDemand*.85))/180)
+
+
+    tempList = [int(i), bearing, googleList[0], int(productPalletes), int(doughPallets)]
     storeBearing.append(tempList)
 
 # Sort list based on bearing
@@ -116,14 +149,19 @@ storeBearing = sorted(storeBearing, key=itemgetter(1))
 
 
 # create capacity dictionary -- based off of capacity of each truck
-# Produce = key, value = dough
-capacity = {50: 0, 49: 0, 48: 0, 47: 0, 46: 0, 45: 0, 44: 0, 43: 0, 42: 0, 41: 1, 40: 1, 39: 2, 38: 2, 37: 3, 36: 3,
-            35: 3, 34: 4,
-            33: 4, 32: 5, 31: 5, 30: 6, 29: 6, 28: 7, 27: 7, 26: 8, 25: 8, 24: 9,
-            23: 9, 22: 10, 21: 10, 20: 10, 19: 11, 18: 11, 17: 12, 16: 12, 15: 13,
-            14: 13, 13: 14, 12: 14, 11: 14, 10: 15, 9: 15, 8: 16, 7: 16, 6: 17,
-            5: 17, 4: 18, 3: 18, 2: 19, 1: 19, 0: 20}
+# Produce = key, value = doughPallets
+# capacity = {50: 0, 49: 0, 48: 0, 47: 0, 46: 0, 45: 0, 44: 0, 43: 0, 42: 0, 41: 1, 40: 1, 39: 2, 38: 2, 37: 3, 36: 3,
+#             35: 3, 34: 4,
+#             33: 4, 32: 5, 31: 5, 30: 6, 29: 6, 28: 7, 27: 7, 26: 8, 25: 8, 24: 9,
+#             23: 9, 22: 10, 21: 10, 20: 10, 19: 11, 18: 11, 17: 12, 16: 12, 15: 13,
+#             14: 13, 13: 14, 12: 14, 11: 14, 10: 15, 9: 15, 8: 16, 7: 16, 6: 17,
+#             5: 17, 4: 18, 3: 18, 2: 19, 1: 19, 0: 20}
 
+capacity = {44:0,43:0,42:0,41:1,40:1,39:2,38:2,37:3,36:3,35:3,34:4,
+            33:4,32:5,31:5,30:6,29:6,28:7,27:7,26:8,25:8,24:9,
+            23:9,22:10,21:10,20:10,19:11,18:11,17:12,16:12,15:13,
+            14:13,13:14,12:14,11:14,10:15,9:15,8:16,7:16,6:17,
+            5:17,4:18,3:18,2:19,1:19,0:20}
 # Begin Routing Heuristic
 
 # ALL TIMES IN MINUTES
@@ -134,15 +172,17 @@ truckLocation = "DistCenter"
 truckTime = 0
 # product, dough
 truckCapacity = [0, 0]
-truckRoute = []
+truckRoute = [truckLocation]   # starting from the distribution center
 serviceTime = 45
 finalRoute = []
+maxDrivingTime = 14 * 60
 
 for store in storeBearing:
     AddStore = False
-    newProductTotal = truckCapacity[0] + store[3]  # total pallete of current truck capacity and store required
-    # Check truck capacity against current capacity
 
+    newProductTotal = truckCapacity[0] + store[3]  # total pallete of current truck capacity and store required
+
+    # Check truck capacity against current capacity
     # Get current store coordinates
     curStoreStr = str(store[0])
     curStoreLat = storeCoordDict[curStoreStr][0]
@@ -156,9 +196,13 @@ for store in storeBearing:
         # Update haversine to GOOGLE API
         # Currently assuming distance in miles divided by 55 mph (max speed for truckers)
         # Time from current store back to distribution center
-        timeBackToDC = (haversine(dcLat, dcLon, curStoreLat, curStoreLon)) / 55.0
+        #timeBackToDC = haversine(dcLat, dcLon, curStoreLat, curStoreLon)
 
-        if timeBackToDC + truckTime + serviceTime < 14 * 60:  # If we can get back to store and not be over 14 hours
+        googleAPIResult = googleAPI(dcLat, dcLon, curStoreLat, curStoreLon)
+
+        timeBackToDC = googleAPIResult[1]
+
+        if timeBackToDC + truckTime + serviceTime < maxDrivingTime:  # If we can get back to store and not be over 14 hours
             # add store to route this truck is taking
             truckRoute.append(store[0])
             print("TruckRoute Currently equal to ")
@@ -169,16 +213,15 @@ for store in storeBearing:
             print "Truck Capacity currently at"
             print truckCapacity
             # add time to truckTime
-            truckTime += serviceTime + (store[2] / 55) + serviceTime
+            truckTime += serviceTime + (store[2] / 55)
+            print "store[2] equal to " + str(store[2])
+
             print "truckTime currently at"
             print truckTime
             truckLocation = store[0]
             AddStore = True
 
-    print "WE HERE"
     if AddStore != True:  # truck needs to head back to depot, this route is complete
-        # TODO
-        # Record truck route
         print truckRoute
         finalRoute.append(tuple(truckRoute))
         # Update truck route to dc -> cur store
