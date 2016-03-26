@@ -131,12 +131,17 @@ for i in storeLoc:
     #TODO
     #double check pallete creation
 
-    thinCrust = ceil(zaDemand*3*.15/60/6)*8
-    cheese = ceil(zaDemand*3 * 2.25 / 4 / 14 / 12)*5.5
-    sauce = ceil(zaDemand * 3* 1.5/2/42/10)*7.5
+    thinCrust = ceil(zaDemand *.15/60/6)*8
+    cheese = ceil(zaDemand * 2.25 / 4 / 14 / 12)*5.5
+    sauce = ceil(zaDemand * 1.5/2/42/10)*7.5
 
     productPalletes = ceil((thinCrust+cheese+sauce)/60)
     doughPallets = ceil((zaDemand / (zaDemand*.85))/180)
+
+    print "------------------------------"
+    print str(productPalletes) + " NUMBER OF PRODUCT PALLETES "
+    print str(doughPallets) + " NUMBER OF DOUGH PALLETES "
+
 
 
     tempList = [int(i), bearing, googleList[0], int(productPalletes), int(doughPallets)]
