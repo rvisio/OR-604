@@ -41,11 +41,13 @@ def googleAPI(lat1, lon1, lat2, lon2):
 
     result= json.load(urllib.urlopen(url))
 
+    print result
+
     # Distance in meters and duration of driving in seconds
     distanceMeters = result['rows'][0]['elements'][0]['distance']['value']
     durationSeconds = result['rows'][0]['elements'][0]['duration']['value']
 
-    return [distanceMeters * 0.00062137, durationSeconds*60]
+    return [distanceMeters * 0.00062137, durationSeconds/60]
 
 # Using answer from hw4 select all stores that have dc 5 has distribution center
 answerSQL = "SELECT * FROM Answer"
@@ -104,8 +106,8 @@ apiKey = u.getAPIKey()
 for i in storeLoc:
     # TODO
     # Update haversine distance to google maps api
-    googleList = googleAPI(dcLat,dcLon,  storeLoc[i][0],storeLoc[i][1])
-    print googleList
+    googleList = googleAPI(dcLat,dcLon, storeLoc[i][0],storeLoc[i][1])
+
     #hDistance = haversine(dcLat, dcLon, storeLoc[i][0], storeLoc[i][1])
     storeCoordDict[i] = storeLoc[i][0], storeLoc[i][1]
     # Calculate  bearing
@@ -125,8 +127,9 @@ for i in storeLoc:
             for x in rows:
                 zaDemand = float(x[2])
 
-    # TODO
-    # Verify if pallete calculation is correct
+
+    #TODO
+    #double check pallete creation
 
     thinCrust = ceil(zaDemand*3*.15/60/6)*8
     cheese = ceil(zaDemand*3 * 2.25 / 4 / 14 / 12)*5.5
@@ -191,7 +194,11 @@ for store in storeBearing:
     print "Truck Capacity currently equal to "
     print truckCapacity
 
+    print "Proposed truck capacity equals product" + str(newProductTotal) + " dough palletes " + str(store[4])
+
     if capacity[newProductTotal] > truckCapacity[1]:
+
+        print ("Can fit the palletes on the truck ")
         # TODO
         # Update haversine to GOOGLE API
         # Currently assuming distance in miles divided by 55 mph (max speed for truckers)
@@ -201,6 +208,10 @@ for store in storeBearing:
         googleAPIResult = googleAPI(dcLat, dcLon, curStoreLat, curStoreLon)
 
         timeBackToDC = googleAPIResult[1]
+
+        print  "Time back to distribution center in minutes is " + str(timeBackToDC) + " current time on truck is " + str(truckTime) + " service time is 45 min"
+
+        print ("conidtional statement total " + str(timeBackToDC+truckTime+serviceTime) + " is less than " + str(maxDrivingTime))
 
         if timeBackToDC + truckTime + serviceTime < maxDrivingTime:  # If we can get back to store and not be over 14 hours
             # add store to route this truck is taking
@@ -222,7 +233,9 @@ for store in storeBearing:
             AddStore = True
 
     if AddStore != True:  # truck needs to head back to depot, this route is complete
+        truckRoute.append("DistCenter")
         print truckRoute
+
         finalRoute.append(tuple(truckRoute))
         # Update truck route to dc -> cur store
         truckRoute = ["DistCenter"]
@@ -232,9 +245,13 @@ for store in storeBearing:
         # Truck capacity = next store product, dough
         truckCapacity[0] = store[3]
         truckCapacity[1] = store[4]
-        # update trucktime to distance to store
-        truckTime = (haversine(dcLat, dcLon, curStoreLat, curStoreLon) / 55.0) + serviceTime
+        #TODO
+        # Change Haversine to google distance
+        newDistance = googleAPI(dcLat, dcLon, curStoreLat, curStoreLon)
+        truckTime = newDistance[1] + serviceTime
 
         numTrucks += 1
 
 print finalRoute
+
+print "number of trucks needed is " + str(numTrucks)
