@@ -70,5 +70,80 @@ games = {
     'SD':{
         'Home':('DEN','KC','OAK','JAC','TEN','MIA','NO','TB'),
         'Away':('DEN','KC','OAK','HOU','IND','CLE','ATL','CAR')
+    },
+    #NFC EAST
+     'WAS':{
+        'Home':('DAL', 'NYG', 'PHI', 'GB', 'MIN', 'CAR', 'CLE', 'PIT'),
+        'Away':('DAL', 'NYG', 'PHI', 'CHI', 'DET', 'ARZ', 'BAL', 'CIN')
+    },
+    'PHI':{
+        'Home':('DAL', 'NYG', 'WAS', 'GB', 'MIN', 'ATL', 'CLE', 'PIT'),
+        'Away':('DAL', 'NYG', 'WAS', 'CHI', 'DET', 'SEA', 'BAL', 'CIN')
+    },
+    'NYG':{
+        'Home':('DAL', 'PHI', 'WAS', 'CHI', 'DET', 'NO', 'BAL', 'CIN'),
+        'Away':('DAL', 'PHI', 'WAS', 'GB', 'MIN', 'LAR', 'CLE', 'PIT')
+    },
+    'DAL':{
+        'Home':('NYG', 'PHI', 'WAS', 'CHI', 'DET', 'TB', 'BAL', 'CIN'),
+        'Away':('NYG', 'PHI', 'WAS', 'GB', 'MIN', 'SF', 'CLE', 'PIT')
+
+    },
+    #NFC NORTH
+    'MIN':{
+        'Home':('CHI', 'DET', 'GB', 'DAL', 'NYG', 'ARZ', 'HOU', 'IND'),
+        'Away':('CHI', 'DET', 'GB', 'PHI', 'WAS', 'CAR', 'JAC', 'TEN')
+    },
+    'GB':{
+        'Home':('CHI', 'DET', 'MIN', 'DAL', 'NYG', 'SEA', 'HOU', 'IND'),
+        'Away':('CHI', 'DET', 'MIN', 'PHI', 'WAS', 'ATL', 'JAC', 'TEN')
+    },
+    'DET':{
+        'Home':('CHI', 'GB', 'MIN', 'PHI', 'WAS', 'LAR', 'JAC', 'TEN'),
+        'Away':('CHI', 'GB', 'MIN', 'DAL', 'NYG', 'NO', 'HOU', 'IND')
+    },
+    'CHI':{
+        'Home':('DET', 'GB', 'MIN', 'PHI', 'WAS', 'SF', 'JAC', 'TEN'),
+        'Away':('DET', 'GB', 'MIN', 'DAL', 'NYG', 'TB', 'HOU', 'IND')
+    },
+    #NFC SOUTH
+    'CAR':{
+        'Home':('ATL', 'NO', 'TB', 'ARZ', 'SF', 'MIN', 'KC', 'SD'),
+        'Away':('ATL', 'NO', 'TB', 'LAR', 'SEA', 'WAS', 'DEN', 'OAK')
+    },
+    'CHI':{
+        'Home':('DET', 'GB', 'MIN', 'PHI', 'WAS', 'SF', 'JAC', 'TEN'),
+        'Away':('DET', 'GB', 'MIN', 'DAL', 'NYG', 'TB', 'HOU', 'IND')
+    },
+    'ATL':{
+        'Home':('CAR', 'NO', 'TB', 'ARZ', 'SF', 'GB', 'KC', 'SD'),
+        'Away':('CAR', 'NO', 'TB', 'LAR', 'SEA', 'PHI', 'DEN', 'OAK')
+    },
+    'NO':{
+        'Home':('ATL', 'CAR', 'TB', 'LAR', 'SEA', 'DET', 'DEN', 'OAK'),
+        'Away':('ATL', 'CAR', 'TB', 'ARZ', 'SF', 'NYG', 'KC', 'SD')
+    },
+    'TB':{
+        'Home':('ATL', 'CAR', 'NO', 'LAR', 'SEA', 'CHI', 'DEN', 'OAK'),
+        'Away':('ATL', 'CAR', 'NO', 'ARZ', 'SF', 'DAL', 'KC', 'SD')
+    },
+    # NFC WEST
+    'ARZ':{
+        'Home':('LAR', 'SF', 'SEA', 'NO', 'TB', 'WAS', 'NE', 'NYJ'),
+        'Away':('LAR', 'SF', 'SEA', 'ATL', 'CAR', 'MIN', 'BUF', 'MIA')
+    },
+    'SEA':{
+        'Home':('ARZ', 'SF', 'LAR', 'ATL', 'CAR', 'PHI', 'BUF', 'MIA'),
+        'Away':('ARZ', 'SF', 'LAR','NO', 'TB', 'GB', 'NE', 'NYJ')
+    },
+    'LAR':{
+        'Home':('ARZ', 'SF', 'SEA', 'ATL', 'CAR', 'NYG', 'BUF', 'MIA'),
+        'Away':('ARZ', 'SF', 'SEA', 'NO', 'TB', 'DAL', 'NE', 'NYJ')
+    },
+    'SF':{
+        'Home':('ARZ', 'LAR', 'SEA', 'NO', 'TB', 'DAL', 'NE', 'NYJ'),
+        'Away':('ARZ', 'LAR', 'SEA', 'ATL', 'CAR', 'CHI', 'BUF', 'MIA')
     }
 }
+
+
