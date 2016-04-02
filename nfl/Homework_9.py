@@ -1,3 +1,4 @@
+from gurobipy import *
 
 week = range(1,18)
 # Home Games Dictionary - Lists all 8 home games for each of 32 each
@@ -96,7 +97,7 @@ division = {
 }
 
 # Time Slot Dictionary - Lists all network timeslots available each week
-Slots = {1: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
+slots = {1: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
              'MON_2_ESPN', 'THU_L_NBC'],
          2: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
              'THU_L_CBS'],
@@ -130,3 +131,29 @@ Slots = {1: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'S
               'THU_L_NFL'],
          17: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
               'THU_L_NFL']}
+
+
+# Create model
+nflModel = Model()
+nflModel.modelSense = GRB.MINIMIZE
+nflModel.update()
+
+myGames = {}
+
+for h in home_games:  # home team
+    print 'Home team ' + str(h)
+    for a in home_games[h]:
+        print a
+        #TODO
+        # Update to range(1,18) when working with bye weeks
+        for w in range(1,18):  # week game is ocurring
+            #TODO
+            # Add in scheduling
+            for s in slots[w]:
+                myGames[a,h,s,w] = nflModel.addVar(obj=1,
+                                                 vtype= GRB.BINARY,
+                                                 name ='game_%s_%s_%s_%s' %(a,h,s,w))
+
+nflModel.update()
+nflModel.write('optimize.lp')
+nflModel.optimize()
