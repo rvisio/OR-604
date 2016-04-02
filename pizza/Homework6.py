@@ -2,14 +2,13 @@ import csv, sqlite3
 from math import *
 from operator import itemgetter
 
-import UtilAPI as u
+import UtilAPI as u    # class that contains my API
 
 import json, urllib
 
-import time
 
 # Set up sqlite db
-dbName = 'hw_four.db'
+dbName = 'hw_6.db'
 myConnection = sqlite3.connect(dbName)
 myCursor = myConnection.cursor()
 
@@ -102,7 +101,7 @@ demandSQL = """SELECT * FROM avgStoreDemand WHERE storeNumber == (?)"""
 storeCoordDict = {}
 
 apiKey = u.getAPIKey()
-
+counter = 0
 for i in storeLoc:
     # TODO
     # Update haversine distance to google maps api
@@ -117,7 +116,7 @@ for i in storeLoc:
 
     curStore = str(i)
     myCursor.execute(demandSQL, (curStore,))
-
+    counter += 1
     # Pull the weekly demand from the avgStoreDemand database
     while True:
         rows = myCursor.fetchall()
@@ -131,9 +130,9 @@ for i in storeLoc:
     #TODO
     #double check pallete creation
 
-    thinCrust = ceil(zaDemand *.15/60/6)*8
-    cheese = ceil(zaDemand * 2.25 / 4 / 14 / 12)*5.5
-    sauce = ceil(zaDemand * 1.5/2/42/10)*7.5
+    thinCrust = ceil(zaDemand*3*.15/60/6)*8
+    cheese = ceil(zaDemand*3 * 2.25 / 4 / 14 / 12)*5.5
+    sauce = ceil(zaDemand * 3* 1.5/2/42/10)*7.5
 
     productPalletes = ceil((thinCrust+cheese+sauce)/60)
     doughPallets = ceil((zaDemand / (zaDemand*.85))/180)
@@ -175,7 +174,7 @@ capacity = {44:0,43:0,42:0,41:1,40:1,39:2,38:2,37:3,36:3,35:3,34:4,
 # ALL TIMES IN MINUTES
 # ALL DISTANCE IN MILES
 # ALL ZA IN DOMINOS
-numTrucks = 1
+numTrucks = 0
 truckLocation = "DistCenter"
 truckTime = 0
 # product, dough
@@ -257,6 +256,28 @@ for store in storeBearing:
 
         numTrucks += 1
 
-print finalRoute
 
+# Create answer SQL if not already existing
+createTableSQL = """ CREATE TABLE IF NOT EXISTS HwSixAnswer
+                     (TruckNumber integer,
+                     Route BLOB); """
+myCursor.execute(createTableSQL)
+myConnection.commit()
+
+# Insert truck number and route taken into HwSixAnswer Database
+print len (finalRoute)
+for i in range(0,len(finalRoute)):
+    print i
+    route = str(finalRoute[i])
+    truckNumber = i+1
+    tempList = [truckNumber,route]
+    myCursor.execute('INSERT INTO HWSixAnswer VALUES (?,?)', tempList)
+    myConnection.commit()
+
+
+
+
+
+for i in finalRoute:
+    print i
 print "number of trucks needed is " + str(numTrucks)
