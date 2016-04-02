@@ -19,7 +19,7 @@ home_games = {
     'GB': ('CHI', 'DET', 'MIN', 'DAL', 'NYG', 'SEA', 'HOU', 'IND'),
     'DET': ('CHI', 'GB', 'MIN', 'PHI', 'WAS', 'LAR', 'JAC', 'TEN'),
     'CHI': ('DET', 'GB', 'MIN', 'PHI', 'WAS', 'SF', 'JAC', 'TEN'),
-    'CAR': ('DAL', 'NYG', 'WAS', 'GB', 'MIN', 'ATL', 'CLE', 'PIT'),
+    'CAR': ('ATL', 'NO', 'TB', 'ARZ', 'SF', 'MIN', 'KC', 'SD'),
     'ATL': ('CAR', 'NO', 'TB', 'ARZ', 'SF', 'GB', 'KC', 'SD'),
     'NO': ('ATL', 'CAR', 'TB', 'LAR', 'SEA', 'DET', 'DEN', 'OAK'),
     'TB': ('ATL', 'CAR', 'NO', 'LAR', 'SEA', 'CHI', 'DEN', 'OAK'),
@@ -60,7 +60,7 @@ away_games = {
     'TB': ('ATL', 'CAR', 'NO', 'ARZ', 'SF', 'DAL', 'KC', 'SD'),
     'ARZ': ('LAR', 'SF', 'SEA', 'ATL', 'CAR', 'MIN', 'BUF', 'MIA'),
     'SEA': ('ARZ', 'SF', 'LAR', 'NO', 'TB', 'GB', 'NE', 'NYJ'),
-    'LAR': ('ARZ', 'SF', 'SEA', 'NO', 'TB', 'DAL', 'NE', 'NYJ'),
+    'LAR': ('ARZ', 'SF', 'SEA', 'NO', 'TB', 'DET', 'NE', 'NYJ'),
     'SF': ('ARZ', 'LAR', 'SEA', 'ATL', 'CAR', 'CHI', 'BUF', 'MIA'),
     'NE': ('BUF', 'MIA', 'NYJ', 'CLE', 'PIT', 'DEN', 'ARZ', 'SF'),
     'NYJ': ('BUF', 'MIA', 'NE', 'CLE', 'PIT', 'KC', 'ARZ', 'SF'),
@@ -147,39 +147,60 @@ nflModel.update()
 
 myGames = {}
 
-for a in teams:  # home team
-    print 'Home team ' + str(a)
-    for h in away_games[a]:  # away games
+# myGames [hometeam, away team, scheduling slot, week number]
+
+# Every game/week/slot combination
+for h in teams:  # home team
+    print 'Home team ' + str(h)
+    for a in away_games[h]:  # away games
         for w in range(1, 18):  # week game is ocurring
             for s in slots[w]:
-                myGames[a, h, s, w] = nflModel.addVar(obj=1,
+                myGames[h, a, s, w] = nflModel.addVar(obj=1,
                                                       vtype=GRB.BINARY,
-                                                      name='game_%s_%s_%s_%s' % (a, h, s, w))
+                                                      name='game_%s_%s_%s_%s' % (h, a, s, w))
 nflModel.update()
 
+# A bye week for every team for every week in season
+for t in teams:
+    for w in range(1,18):
+        myGames[t,"BYE",'Sun_BYE_NFL',w] = nflModel.addVar(obj=1,
+                                                          vtype=GRB.BINARY,
+                                                          name = 'game_%s_BYE_Sun_Bye_NFL_%s' %(t,w))
+nflModel.update()
+
+# First constraint?
 myConstr = {}
-for a in teams:
-    for h in away_games[a]:
+for t in teams:
+    for a in away_games[t]:
         print "Away Games " + str(h)
-        constrName = '1_game_once_%s_%s' % (a, h)
-        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[a, h, s, w]
-                                                           # for a in home_games
-                                                           # for h in away_games[a]
+        constrName = '1_game_once_%s_%s' % (t, a)
+        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, s, w]
                                                            for w in range(1, 18)
                                                            for s in slots[w]) == 1,
-                                                  name='1_game_once_%s_%s' % (a, h))
+                                                  name='1_game_once_%s_%s' % (t, a))
 nflModel.update()
 
+# Second Constraint everyone plays once per week
 for t in teams:
-    for w in range(4,12):
-        quicksum(myGames[a,h,s,w] for a in home_games[a]
-                 for s in slots[w] if s!="Sun_BYE_NFL") + quicksum(myGames[t,h,s,w] for h in away_games[t] for s in slots[w] if s!="Sun_BYE_NFL") + myGames[t,"BYE", 'Sun_BYE_NFL',w] == 1
-        # quicksum(myGames[t,h,s,w]
-        #          for h in away_games[t]
-        #          for s in slots[w] if s!="Sun_BYE_NFL") +
-        # myGames[t,"BYE", 'Sun_BYE_NFL',w] == 1
-
+    for w in range(1,18):
+        constrName ='2_one_game_per_week_%s_for_team_%s' % (w,t)
+        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
+                                                           for a in away_games[t]
+                                                           for s in slots[w]) + quicksum(myGames[h,t,s,w]
+                                                                                         for h in home_games[t]
+                                                                                         for s in slots[w]) + myGames[t,"BYE",'Sun_BYE_NFL',w] == 1,
+        name = constrName)
 nflModel.update()
+
+# What constraint is this
+# Constraining bye weeks to 4-11
+for t in teams:
+    constrName = '3_game_%s' %(t)
+    myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,'BYE','Sun_BYE_NFL',w] for w in range(4,12))==1,
+    name = constrName)
+nflModel.update()
+
+
 nflModel.write('optimize.lp')
 nflModel.optimize()
 
@@ -188,7 +209,7 @@ DROPTABLESQL = """DROP TABLE IF EXISTS Answer"""
 myCursor.execute(DROPTABLESQL)
 myConnection.commit()
 
-SQLSTRING = """CREATE TABLE IF NOT EXISTS Answer (Away TEXT, Home TEXT, Network TEXT, Week TEXT)"""
+SQLSTRING = """CREATE TABLE IF NOT EXISTS Answer (Home TEXT, Away TEXT, Network TEXT, Week INTEGER)"""
 myCursor.execute(SQLSTRING)
 myConnection.commit()
 tempList = []
@@ -196,7 +217,7 @@ if nflModel.Status == GRB.OPTIMAL:
     for e in myGames:
         if myGames[e].x > 0:
             print e, myGames[e].x
-            val = (str(e[0]), str(e[1]), str(e[2]), str(e[3]))
+            val = (str(e[0]), str(e[1]), str(e[2]), int(e[3]))
             tempList.append(val)
 
 myCursor.executemany('INSERT INTO Answer VALUES(?,?,?,?);', tempList)
