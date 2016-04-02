@@ -1,40 +1,48 @@
 from gurobipy import *
+import sqlite3
 
-week = range(1,18)
+dbName = "hw_9.db"
+myConnection = sqlite3.connect(dbName)
+myCursor = myConnection.cursor()
+
+week = range(1, 18)
+teams = ('NE', 'NYJ', 'BUF', 'MIA', 'CIN', 'PIT', 'BAL', 'CLE', 'HOU', 'IND', 'JAC',
+         'TEN', 'DEN', 'KC', 'OAK', 'SD', 'WAS', 'PHI', 'NYG', 'DAL', 'MIN', 'GB', 'DET', 'CHI', 'CAR', 'ATL', 'NO',
+         'TB', 'ARZ', 'SEA', 'LAR', 'SF')
 # Home Games Dictionary - Lists all 8 home games for each of 32 each
 home_games = {
-    'WAS':('DAL', 'NYG', 'PHI', 'GB', 'MIN', 'CAR', 'CLE', 'PIT'),
-    'PHI':('DAL', 'NYG', 'WAS', 'GB', 'MIN', 'ATL', 'CLE', 'PIT'),
-    'NYG':('DAL', 'PHI', 'WAS', 'CHI', 'DET', 'NO', 'BAL', 'CIN'),
-    'DAL':('NYG', 'PHI', 'WAS', 'CHI', 'DET', 'TB', 'BAL', 'CIN'),
-    'MIN':('CHI', 'DET', 'GB', 'DAL', 'NYG', 'ARZ', 'HOU', 'IND'),
-    'GB':('CHI', 'DET', 'MIN', 'DAL', 'NYG', 'SEA', 'HOU', 'IND'),
-    'DET':('CHI', 'GB', 'MIN', 'PHI', 'WAS', 'LAR', 'JAC', 'TEN'),
-    'CHI':('DET', 'GB', 'MIN', 'PHI', 'WAS', 'SF', 'JAC', 'TEN'),
-    'CAR':('DAL', 'NYG', 'WAS', 'GB', 'MIN', 'ATL', 'CLE', 'PIT'),
-    'ATL':('CAR', 'NO', 'TB', 'ARZ', 'SF', 'GB', 'KC', 'SD'),
-    'NO':('ATL', 'CAR', 'TB', 'LAR', 'SEA', 'DET', 'DEN', 'OAK'),
-    'TB':('ATL', 'CAR', 'NO', 'LAR', 'SEA', 'CHI', 'DEN', 'OAK'),
-    'ARZ':('LAR', 'SF', 'SEA', 'NO', 'TB', 'WAS', 'NE', 'NYJ'),
-    'SEA':('ARZ', 'SF', 'LAR', 'ATL', 'CAR', 'PHI', 'BUF', 'MIA'),
-    'LAR':('ARZ', 'SF', 'SEA', 'ATL', 'CAR', 'NYG', 'BUF', 'MIA'),
-    'SF':('ARZ', 'LAR', 'SEA', 'NO', 'TB', 'DAL', 'NE', 'NYJ'),
-    'NE':('BUF','MIA','NYJ','BAL','CIN','HOU','LAR','SEA'),
-    'NYJ':('BUF','MIA','NE','BAL','CIN','IND','LAR','SEA'),
-    'BUF':('MIA','NE','NYJ','CLE','PIT','JAC','ARZ','SF'),
-    'MIA':('BUF','NE','NYJ','CLE','PIT','TEN','ARZ','SF'),
-    'CIN':('BAL','CLE','PIT','BUF','MIA','DEN','PHI','WAS'),
-    'PIT':('BAL','CIN','CLE','NE','NYJ','KC','DAL','NYG'),
-    'BAL':('CIN','CLE','PIT','BUF','MIA','OAK','PHI','WAS'),
-    'CLE':('BAL','CIN','PIT','NE','NYJ','SD','DAL','NYG'),
-    'HOU':('IND','JAC','TEN','KC','SD','CIN','CHI','DET'),
-    'IND':('HOU','JAC','TEN','KC','SD','PIT','CHI','DET'),
-    'JAC':('HOU','IND','TEN','DEN','OAK','BAL','GB','MIN'),
-    'TEN':('HOU','IND','JAC','DEN','OAK','CLE','GB','MIN'),
-    'DEN':('KC','OAK','SD','HOU','IND','NE','ATL','CAR'),
-    'KC':('DEN','OAK','SD','JAC','TEN','NYJ','NO','TB'),
-    'OAK':('DEN','KC','SD','HOU','IND','BUF','ATL','CAR'),
-    'SD':('DEN','KC','OAK','JAC','TEN','MIA','NO','TB')
+    'WAS': ('DAL', 'NYG', 'PHI', 'GB', 'MIN', 'CAR', 'CLE', 'PIT'),
+    'PHI': ('DAL', 'NYG', 'WAS', 'GB', 'MIN', 'ATL', 'CLE', 'PIT'),
+    'NYG': ('DAL', 'PHI', 'WAS', 'CHI', 'DET', 'NO', 'BAL', 'CIN'),
+    'DAL': ('NYG', 'PHI', 'WAS', 'CHI', 'DET', 'TB', 'BAL', 'CIN'),
+    'MIN': ('CHI', 'DET', 'GB', 'DAL', 'NYG', 'ARZ', 'HOU', 'IND'),
+    'GB': ('CHI', 'DET', 'MIN', 'DAL', 'NYG', 'SEA', 'HOU', 'IND'),
+    'DET': ('CHI', 'GB', 'MIN', 'PHI', 'WAS', 'LAR', 'JAC', 'TEN'),
+    'CHI': ('DET', 'GB', 'MIN', 'PHI', 'WAS', 'SF', 'JAC', 'TEN'),
+    'CAR': ('DAL', 'NYG', 'WAS', 'GB', 'MIN', 'ATL', 'CLE', 'PIT'),
+    'ATL': ('CAR', 'NO', 'TB', 'ARZ', 'SF', 'GB', 'KC', 'SD'),
+    'NO': ('ATL', 'CAR', 'TB', 'LAR', 'SEA', 'DET', 'DEN', 'OAK'),
+    'TB': ('ATL', 'CAR', 'NO', 'LAR', 'SEA', 'CHI', 'DEN', 'OAK'),
+    'ARZ': ('LAR', 'SF', 'SEA', 'NO', 'TB', 'WAS', 'NE', 'NYJ'),
+    'SEA': ('ARZ', 'SF', 'LAR', 'ATL', 'CAR', 'PHI', 'BUF', 'MIA'),
+    'LAR': ('ARZ', 'SF', 'SEA', 'ATL', 'CAR', 'NYG', 'BUF', 'MIA'),
+    'SF': ('ARZ', 'LAR', 'SEA', 'NO', 'TB', 'DAL', 'NE', 'NYJ'),
+    'NE': ('BUF', 'MIA', 'NYJ', 'BAL', 'CIN', 'HOU', 'LAR', 'SEA'),
+    'NYJ': ('BUF', 'MIA', 'NE', 'BAL', 'CIN', 'IND', 'LAR', 'SEA'),
+    'BUF': ('MIA', 'NE', 'NYJ', 'CLE', 'PIT', 'JAC', 'ARZ', 'SF'),
+    'MIA': ('BUF', 'NE', 'NYJ', 'CLE', 'PIT', 'TEN', 'ARZ', 'SF'),
+    'CIN': ('BAL', 'CLE', 'PIT', 'BUF', 'MIA', 'DEN', 'PHI', 'WAS'),
+    'PIT': ('BAL', 'CIN', 'CLE', 'NE', 'NYJ', 'KC', 'DAL', 'NYG'),
+    'BAL': ('CIN', 'CLE', 'PIT', 'BUF', 'MIA', 'OAK', 'PHI', 'WAS'),
+    'CLE': ('BAL', 'CIN', 'PIT', 'NE', 'NYJ', 'SD', 'DAL', 'NYG'),
+    'HOU': ('IND', 'JAC', 'TEN', 'KC', 'SD', 'CIN', 'CHI', 'DET'),
+    'IND': ('HOU', 'JAC', 'TEN', 'KC', 'SD', 'PIT', 'CHI', 'DET'),
+    'JAC': ('HOU', 'IND', 'TEN', 'DEN', 'OAK', 'BAL', 'GB', 'MIN'),
+    'TEN': ('HOU', 'IND', 'JAC', 'DEN', 'OAK', 'CLE', 'GB', 'MIN'),
+    'DEN': ('KC', 'OAK', 'SD', 'HOU', 'IND', 'NE', 'ATL', 'CAR'),
+    'KC': ('DEN', 'OAK', 'SD', 'JAC', 'TEN', 'NYJ', 'NO', 'TB'),
+    'OAK': ('DEN', 'KC', 'SD', 'HOU', 'IND', 'BUF', 'ATL', 'CAR'),
+    'SD': ('DEN', 'KC', 'OAK', 'JAC', 'TEN', 'MIA', 'NO', 'TB')
 }
 # Away Games Dictionary - Lists all 8 away games for each of 32 teams
 away_games = {
@@ -104,21 +112,21 @@ slots = {1: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'S
          3: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
              'THU_L_CBS'],
          4: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_L_CBS', "Sun_BYE_NFL"],
          5: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_L_CBS', "Sun_BYE_NFL"],
          6: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_L_CBS', "Sun_BYE_NFL"],
          7: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_L_CBS', "Sun_BYE_NFL"],
          8: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_L_CBS', "Sun_BYE_NFL"],
          9: ['SUN_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_L_CBS', "Sun_BYE_NFL"],
          10: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-              'THU_L_NFL'],
+              'THU_L_NFL', "Sun_BYE_NFL"],
          11: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-              'THU_L_NFL'],
+              'THU_L_NFL', "Sun_BYE_NFL"],
          12: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
               'THU_E_CBS', 'THU_L_FOX'],
          13: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
@@ -132,7 +140,6 @@ slots = {1: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'S
          17: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
               'THU_L_NFL']}
 
-
 # Create model
 nflModel = Model()
 nflModel.modelSense = GRB.MINIMIZE
@@ -140,20 +147,58 @@ nflModel.update()
 
 myGames = {}
 
-for h in home_games:  # home team
-    print 'Home team ' + str(h)
-    for a in home_games[h]:
-        print a
-        #TODO
-        # Update to range(1,18) when working with bye weeks
-        for w in range(1,18):  # week game is ocurring
-            #TODO
-            # Add in scheduling
+for a in teams:  # home team
+    print 'Home team ' + str(a)
+    for h in away_games[a]:  # away games
+        for w in range(1, 18):  # week game is ocurring
             for s in slots[w]:
-                myGames[a,h,s,w] = nflModel.addVar(obj=1,
-                                                 vtype= GRB.BINARY,
-                                                 name ='game_%s_%s_%s_%s' %(a,h,s,w))
+                myGames[a, h, s, w] = nflModel.addVar(obj=1,
+                                                      vtype=GRB.BINARY,
+                                                      name='game_%s_%s_%s_%s' % (a, h, s, w))
+nflModel.update()
+
+myConstr = {}
+for a in teams:
+    for h in away_games[a]:
+        print "Away Games " + str(h)
+        constrName = '1_game_once_%s_%s' % (a, h)
+        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[a, h, s, w]
+                                                           # for a in home_games
+                                                           # for h in away_games[a]
+                                                           for w in range(1, 18)
+                                                           for s in slots[w]) == 1,
+                                                  name='1_game_once_%s_%s' % (a, h))
+nflModel.update()
+
+for t in teams:
+    for w in range(4,12):
+        quicksum(myGames[a,h,s,w] for a in home_games[a]
+                 for s in slots[w] if s!="Sun_BYE_NFL") + quicksum(myGames[t,h,s,w] for h in away_games[t] for s in slots[w] if s!="Sun_BYE_NFL") + myGames[t,"BYE", 'Sun_BYE_NFL',w] == 1
+        # quicksum(myGames[t,h,s,w]
+        #          for h in away_games[t]
+        #          for s in slots[w] if s!="Sun_BYE_NFL") +
+        # myGames[t,"BYE", 'Sun_BYE_NFL',w] == 1
 
 nflModel.update()
 nflModel.write('optimize.lp')
 nflModel.optimize()
+
+#
+DROPTABLESQL = """DROP TABLE IF EXISTS Answer"""
+myCursor.execute(DROPTABLESQL)
+myConnection.commit()
+
+SQLSTRING = """CREATE TABLE IF NOT EXISTS Answer (Away TEXT, Home TEXT, Network TEXT, Week TEXT)"""
+myCursor.execute(SQLSTRING)
+myConnection.commit()
+tempList = []
+if nflModel.Status == GRB.OPTIMAL:
+    for e in myGames:
+        if myGames[e].x > 0:
+            print e, myGames[e].x
+            val = (str(e[0]), str(e[1]), str(e[2]), str(e[3]))
+            tempList.append(val)
+
+myCursor.executemany('INSERT INTO Answer VALUES(?,?,?,?);', tempList)
+myConnection.commit()
+myCursor.close()
