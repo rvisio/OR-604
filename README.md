@@ -4,3 +4,6 @@ Code from course GMU OR 604 Practical Optimization part of Data Annalytics Engin
 
 ## pizza directory
 - contains models written for dominos pizza case study  
+
+## nfl directory
+- code for optimizing the nfl schedule 
