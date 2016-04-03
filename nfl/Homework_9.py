@@ -334,7 +334,7 @@ nflModel.update()
 # TODO
 # 15th Constraint
 # Each team must play at least 4 home/away games every 10 weeks
-
+# n
 nflModel.write('optimize.lp')
 nflModel.optimize()
 
