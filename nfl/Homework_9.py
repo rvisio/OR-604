@@ -181,6 +181,8 @@ for t in teams:
                                                   name='1_game_once_%s_%s' % (t, a))
 nflModel.update()
 
+#TODO
+# Investigate second quicksum should we be looping over home_games[t] or away games?
 # Second Constraint everyone plays once per week
 for t in teams:
     for w in range(1,18):
@@ -193,11 +195,12 @@ for t in teams:
         name = constrName)
 nflModel.update()
 
+# Third constraint?
 # What constraint is this
 # Constraining bye weeks to 4-11
 for t in teams:
-    constrName = '03_game_%s' %(t)
-    myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,'BYE','Sun_BYE_NFL',w] for w in range(4,12))==1,
+    constrName = '03_bye_game_%s' %(t)
+    myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,'BYE','Sun_BYE_NFL',w] for w in range(4,12)) == 1,
     name = constrName)
 nflModel.update()
 
@@ -222,7 +225,7 @@ nflModel.update()
 
 # THU_L_CBS THU_L_NFL   THU_L_NBC
 # TODO
-# FIX
+# FIX -- THIS CONSTRAINT IS NOT FUNCTIONING PROPERLY
 # Confirm that Thursday Late CBS Games are played in weeks 2-9 (for k in range(2,10)
 
 for w in range(1,18):
@@ -243,6 +246,8 @@ nflModel.update()
 
 # Seventh Constraint
 # Two Saturday Night games in week 15 (Saturday early and saturday late)
+#TODO
+# Adding two SAT_L_NFL games instead of one early/one late
 for w in [15]:
     constrName = '07_Two_Sat_Night_%s' %(w)
     myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,'SAT_E_NFL',w]
@@ -257,7 +262,6 @@ nflModel.update()
 # Eighth Constraint
 # only one double header game in weeks 1-16 and two in week 17
 
-# TODO
 # Ninth Constraint
 # Only One sunday night game in weeks 1-16, no Sunday night game in week 17
 for w in range(1,18):
@@ -268,22 +272,42 @@ for w in range(1,18):
                                                            for a in away_games[t]) == 1,
                                                   name = constrName)
     else:
-        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,'SUN_N_NBC',w]
+        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,'SUN_N_NBC', w]
                                                            for t in teams
                                                            for a in away_games[t]) == 0,
                                                   name = constrName)
 nflModel.update()
 
-# TODO
 # Tenth Constraint
 # Multiple rules for  Monday Night Games
 # Two Monday Night games in week 1 -- late game must be hosted by a west coast team
 # Only one monday night game in weeks 2-16. No mon night game in week 17
-#for w in range(1,18):
+
+#TODO
+# Fix week 1 of monday night games. currently three games being scheduled (2 mon_1_espn and 1 mon_2_espn (west coast team not even hosting somehow))
+
+for w in range(1,18):
+    constrName = '10_Monday_Night_Constraints_%s' % (w)
+    if w == 1:
+        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,'MON_1_ESPN',w]
+                                                           for t in teams
+                                                           for a in away_games[t]) + quicksum(myGames[t,a,'MON_2_ESPN',w]
+                                                                                             for t in westCoast
+                                                                                             for a in away_games[t]) == 2,
+                                                  name = constrName)
+    elif w != 17:
+        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,'MON_1_ESPN',w]
+                                                           for t in teams
+                                                           for a in away_games[t]) == 1,
+                                                  name = constrName)
+    else:
+        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,'MON_1_ESPN',w]
+                                                           for t in teams
+                                                           for a in away_games[t]) == 0,
+                                                  name = constrName)
+nflModel.update()
 
 
-
-# TODO
 # Eleventh Constraint
 # West coast and Mountain Teams cannot play at home during sunday early timeslot
 for w in range(1,18):
@@ -305,7 +329,7 @@ nflModel.update()
 
 # TODO
 # 14th constraint
-# Each team muts play at least 2 home/away games every 6 weeks
+# Each team must play at least 2 home/away games every 6 weeks
 
 # TODO
 # 15th Constraint
