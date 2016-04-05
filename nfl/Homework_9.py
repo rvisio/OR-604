@@ -123,21 +123,21 @@ slots = {1: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'S
          3: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
              'THU_L_CBS'],
          4: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS', "Sun_BYE_NFL"],
+             'THU_L_CBS'],
          5: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS', "Sun_BYE_NFL"],
+             'THU_L_CBS'],
          6: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS', "Sun_BYE_NFL"],
+             'THU_L_CBS'],
          7: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS', "Sun_BYE_NFL"],
+             'THU_L_CBS'],
          8: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS', "Sun_BYE_NFL"],
+             'THU_L_CBS'],
          9: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS', "Sun_BYE_NFL"],
+             'THU_L_CBS'],
          10: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-              'THU_L_NFL', "Sun_BYE_NFL"],
+              'THU_L_NFL'],
          11: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-              'THU_L_NFL', "Sun_BYE_NFL"],
+              'THU_L_NFL'],
          12: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
               'THU_E_CBS', 'THU_L_FOX', 'THU_L_NBC'],
          13: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
@@ -172,8 +172,8 @@ nflModel.update()
 
 # A bye week for every team for every week in season
 for t in teams:
-    for w in range(1, 18):
-        myGames[t, "BYE", 'Sun_BYE_NFL', w] = nflModel.addVar(obj=1,
+    for w in range(4, 12):
+        myGames[t, 'BYE', 'Sun_BYE_NFL', w] = nflModel.addVar(obj=1,
                                                               vtype=GRB.BINARY,
                                                               name='game_%s_BYE_Sun_Bye_NFL_%s' % (t, w))
 nflModel.update()
@@ -199,9 +199,13 @@ for t in teams:
                                                            for a in home_games[t]
                                                            for s in slots[w]) + quicksum(myGames[h, t, s, w]
                                                                                          for h in away_games[t]
-                                                                                         for s in slots[w]) + myGames[
-                                                      t, "BYE", 'Sun_BYE_NFL', w] == 1,
+                                                                                         for s in slots[w]) == 1,
                                                   name=constrName)
+
+myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,"BYE",'Sun_BYE_NFL',w]
+                                                   for t in teams
+                                                   for w in range(4,12)) == 1,
+                                              name = constrName)
 nflModel.update()
 
 # Third constraint?
