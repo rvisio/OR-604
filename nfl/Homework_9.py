@@ -8,6 +8,7 @@ import sqlite3
 # TODO
 # 1) Change constraint in six to commented code and adjust if needed
 # 2) Check that home_games[t] vs away_games[t] is correct in constraint six
+# 3) Once Dr.C sends his comments, update/fix what is needed
 
 
 dbName = "hw_9.db"
@@ -172,8 +173,8 @@ nflModel.update()
 
 # A bye week for every team for every week in season
 for t in teams:
-    for w in range(4, 12):
-        myGames[t, 'BYE', 'Sun_BYE_NFL', w] = nflModel.addVar(obj=1,
+    for w in range(1, 18):
+        myGames[t, "BYE", 'Sun_BYE_NFL', w] = nflModel.addVar(obj=1,
                                                               vtype=GRB.BINARY,
                                                               name='game_%s_BYE_Sun_Bye_NFL_%s' % (t, w))
 nflModel.update()
@@ -199,13 +200,21 @@ for t in teams:
                                                            for a in home_games[t]
                                                            for s in slots[w]) + quicksum(myGames[h, t, s, w]
                                                                                          for h in away_games[t]
-                                                                                         for s in slots[w]) == 1,
+                                                                                         for s in slots[w]) + myGames[
+                                                      t, "BYE", 'Sun_BYE_NFL', w]== 1,
                                                   name=constrName)
 
-myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,"BYE",'Sun_BYE_NFL',w]
-                                                   for t in teams
-                                                   for w in range(4,12)) == 1,
-                                              name = constrName)
+# for t in teams:
+#     constrName = '02_one_Game_per_week_for_team_%s' % (t)
+#     myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
+#                                                        for a in home_games[t]
+#                                                        for w in range(1,18)
+#                                                        for s in slots[w])+quicksum(myGames[h,t,s,w]
+#                                                                                    for h in away_games[t]
+#                                                                                    for w in range(1,18)
+#                                                                                    for s in slots[w]) + quicksum(myGames[t, "BYE", 'Sun_BYE_NFL', w]
+#                                                                                                                  for w in range(4,12)) <= 3,
+#                                               name = constrName)
 nflModel.update()
 
 # Third constraint?
@@ -236,12 +245,13 @@ myConstr[constrName] = nflModel.addConstr(
     name=constrName)
 nflModel.update()
 
+
 # Sixth Constraint
 # One thursday night game per week
 
 # THU_L_CBS THU_L_NFL   THU_L_NBC
 # TODO
-# FIX -- THIS CONSTRAINT IS NOT FUNCTIONING PROPERLY
+# Verify that this constraint is working properly
 # Confirm that Thursday Late CBS Games are played in weeks 2-9 (for k in range(2,10)
 
 constrName = '06_One_Thurs_Night_Game'
@@ -306,7 +316,6 @@ nflModel.update()
 
 # Seventh Constraint
 # Two Saturday Night games in week 15 (Saturday early and saturday late)
-# TODO
 # Adding two SAT_L_NFL games instead of one early/one late
 
 constrName = '07_One_Sat_Early_Game_%s' % (w)
@@ -323,7 +332,7 @@ myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'SAT_L_NFL', 15
 
 nflModel.update()
 
-# TODO
+
 # Eighth Constraint
 # only one double header game in weeks 1-16 and two in week 17
 for w in range(1, 17):
@@ -364,8 +373,6 @@ nflModel.update()
 # Two Monday Night games in week 1 -- late game must be hosted by a west coast team
 # Only one monday night game in weeks 2-16. No mon night game in week 17
 
-# TODO
-# Fix week 1 of monday night games. currently three games being scheduled (2 mon_1_espn and 1 mon_2_espn (west coast team not even hosting somehow))
 
 for w in range(1, 17):
     if w == 1:
@@ -406,7 +413,7 @@ for w in range(1, 18):
                                                   name=constrName)
 nflModel.update()
 
-# TODO
+
 # Twelfth
 # No team plays 4 consecutive home/away games (BYE game counts as away)
 
@@ -426,8 +433,8 @@ for t in teams:
                                                            for w in range(i,i+4)
                                                            for s in slots[w]) <= 3,
                                                   name = constrName)
+nflModel.update()
 
-# TODO
 # 13th constraint
 # No team plays 3 consecutive home/away games during weeks 1-5 and 15-17
 constr13Weeks = [1,2,3,4,5,15,16,17]
@@ -450,7 +457,7 @@ nflModel.update()
 
 
 
-# TODO
+
 # 14th constraint
 # Each team must play at least 2 home/away games every 6 weeks
 for t in teams:
@@ -466,7 +473,7 @@ for t in teams:
                                                   name = constrName)
 nflModel.update()
 
-# TODO
+
 # 15th Constraint
 # Each team must play at least 4 home/away games every 10 weeks
 
@@ -482,6 +489,89 @@ for t in teams:
                                                                                  for s in slots[w]) >= 4,
                                           name = constrName)
 nflModel.update()
+
+
+# 16th Constraint
+# Previous year superbowl champion opens season at home on thursday night
+champ = ['DEN']
+for t in champ:
+    constrName = '16_SuperBowlChamp_%s_Opens_At_Home' % champ
+    myConstrName = nflModel.addConstr(quicksum(myGames[t, a, 'THU_L_NBC', 1]
+                                           for a in home_games[t]) == 1,
+                                  name = constrName)
+nflModel.update()
+
+#17th Constraint
+# DAL & DET play at home on Thanksgiving (Week 12)
+# Dallas = myGames['DAL',home_games['DAL'],'THU_L_FOX',12]
+# Detroit = myGames['DET',home_games['DET'],'THU_E_CBS',12]
+
+constrName = '17_Thanksgiving_games_for_team_DAL'
+myConstrName = nflModel.addConstr(quicksum(myGames['DAL',a,'THU_L_FOX',12]
+                                           for a in home_games('DAL')) == 1,
+                                  name = constrName)
+nflModel.update()
+
+constrName = '17_Thanksgiving_games_for_team_DET'
+myConstrName = nflModel.addConstr(quicksum(myGames['DET',a,'THU_E_CBS',12]
+                                           for a in home_games('DAL')) == 1,
+                                  name = constrName)
+nflModel.update()
+
+# TODO 18th constraint
+# NBC Gets Thursday Night Games week 1 & 12
+# Scheduling dictionary has been set up to account for this already (also reduces number of variables created by gurobi)
+# Is constraint necessary?
+
+# TODO 19th Constraint
+# CBS gets Thursday Night Games week 2-9
+# Same as above
+
+# TODO 20th Constraint
+# Same as 18th constraint..dict accounts for this to reduce number of variables created.
+# Constraint still necessary?
+
+# TODO 21st Constraint
+# Fox/CBS Get at least 3 early games on Sundays
+# use i as iterator same as 15th constraint?
+
+# TODO 22nd constraint
+# Fox/CBS each get at least 5 games on sundays
+# Same as 21st/15th constraint?
+
+# TODO 23rd Constraint
+# Fox/CBS each get 8 double headers total for weeks 1 - 16
+# use iterator
+
+# TODO 24th Constraint
+# FOX/CBS each get a double header in week 17
+
+# TODO 25th constraint
+# FOX/CBS cannot have more than 2 double headers in a row
+
+# TODO 26th constraint
+# No team can have more than 5 prime time games in a season (Thanksgiving day games do not count as primetime)
+
+# TODO 27th Constraint
+# No more than 4 games on NBC in a season
+
+# TODO 28th Constraint- what is the international game time slot??
+# Teams playing an international game will have a home game the week before their international game
+
+# TODO 29th Constraint
+# Teams playing an international game will have their BYE game the week following the international game
+
+# TODO 30th Constraint
+# Two teams cannot play back to back games against each other or play against each other the week before and after a BYE
+
+# TODO #31st Constraint
+# No team plays more than 2 road games against teams coming off a BYE
+
+# TODO 32nd Constraint
+# All teams playing away on Thursday night are home the week before
+
+# TODO 33rd Constraint
+# Week 17 will consist of games between division opponents only
 
 
 nflModel.setParam('MIPFocus', 1)
