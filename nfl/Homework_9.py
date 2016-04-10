@@ -542,19 +542,19 @@ nflModel.update()
 # Is constraint necessary???
 
 # NBC only getting game week 1
-
-# constrName = '18_nbc_thurs_night_week_1'
-# myConstr = nflModel.addConstr(quicksum(myGames[t,a,'THU_L_NBC', 1]
-#                                        for t in teams
-#                                        for a in home_games[t]) == 1,
-#                               name = constrName)
+#
+# for t in teams:
+#     constrName = '18_nbc_thurs_night_week_1'
+#     myConstr = nflModel.addConstr(quicksum(myGames[t,a,'THU_L_NBC', 1]
+#                                            for a in home_games[t]) == 1,
+#                                   name = constrName)
 # nflModel.update()
 #
-# constrName = '18_nbc_thurs_night_week_12'
-# myConstr = nflModel.addConstr(quicksum(myGames[t,a,'THU_L_NBC', 12]
-#                                        for t in teams
-#                                        for a in home_games[t]) == 1,
-#                               name = constrName)
+# for t in teams:
+#     constrName = '18_nbc_thurs_night_week_12'
+#     myConstr = nflModel.addConstr(quicksum(myGames[t,a,'THU_L_NBC', 12]
+#                                            for a in home_games[t]) == 1,
+#                                   name = constrName)
 # nflModel.update()
 
 # TODO 19th Constraint
@@ -612,12 +612,47 @@ nflModel.update()
 # Fox/CBS each get 8 double headers total for weeks 1 - 16
 # use iterator
 
+#
+# for w in range(1, 17):
+#     for t in teams:
+#         constrName = '23_eight_double_headers_FOX'
+#         myConstr = nflModel.addConstr(quicksum(myGames[t, a, s, w]
+#                                                for a in home_games[t]
+#                                                for s in slots[w] if s == 'Sun_D_FOX') == 8,
+#                                       name=constrName)
+# nflModel.update()
+# for w in range(1, 17):
+#     for t in teams:
+#         constrName = '23a_eight_double_headers_CBS'
+#         myConstr = nflModel.addConstr(quicksum(myGames[t, a, s, w]
+#                                                for a in home_games[t]
+#                                                for s in slots[w] if s == 'Sun_D_CBS') == 8,
+#                                       name=constrName)
+# nflModel.update()
+
 # TODO 24th Constraint
 # FOX/CBS each get a double header in week 17
 # Scheduling dictionary already accounts for this
+constrName = '24_fox_doubleHeader'
+myConstr = nflModel.addConstr(quicksum(myGames[t, a, 'SUN_D_FOX', 17]
+                                       for t in teams
+                                       for a in home_games[t]) == 1,
+                              name = constrName)
+nflModel.update()
+
+constrName = '24_cbs_doubleheader'
+myConstr = nflModel.addConstr(quicksum(myGames[t, a, 'SUN_D_CBS', 17]
+                                       for t in teams
+                                       for a in home_games[t]) == 1,
+                              name = constrName)
+nflModel.update()
 
 # TODO 25th constraint
 # FOX/CBS cannot have more than 2 double headers in a row
+
+# for t in teams:
+#     for i in range(1,16):
+        # iterate through and make sure no more than two double headers happening
 
 # TODO 26th constraint
 # No team can have more than 5 prime time games in a season (Thanksgiving day games do not count as primetime)
