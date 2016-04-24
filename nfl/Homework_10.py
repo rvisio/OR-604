@@ -118,38 +118,39 @@ division = {
 
 # Time Slot Dictionary - Lists all network timeslots available each week
 slots = {1: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'MON_2_ESPN', 'THU_L_NBC'],
+             'MON_2_ESPN', 'THU_N_NBC'],
          2: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_N_CBS'],
          3: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_N_CBS'],
          4: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_N_CBS'],
          5: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_N_CBS'],
          6: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_N_CBS'],
          7: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_N_CBS'],
          8: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_N_CBS'],
          9: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-             'THU_L_CBS'],
+             'THU_N_CBS'],
          10: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-              'THU_L_NFL'],
+              'THU_N_NFL'],
          11: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-              'THU_L_NFL'],
+              'THU_N_NFL'],
          12: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
               'THU_E_CBS', 'THU_L_FOX', 'THU_N_NBC'],
          13: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-              'THU_L_NFL'],
+              'THU_N_NFL'],
          14: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-              'THU_L_NFL'],
+              'THU_N_NFL'],
          15: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-              'THU_L_NFL', 'SAT_E_NFL', 'SAT_L_NFL'],
+              'THU_N_NFL', 'SAT_E_NFL', 'SAT_L_NFL'],
          16: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'MON_1_ESPN',
-              'THU_L_NFL'],
+              'THU_N_NFL'],
          17: ['Sun_E_CBS', 'Sun_E_FOX', 'SUN_L_CBS', 'SUN_L_FOX', 'SUN_D_CBS', 'SUN_D_FOX']}
+
 
 # Create model
 nflModel = Model()
@@ -198,7 +199,7 @@ for t in teams:
         constrName = '02_no_Bye_not_In_bye_week_%s_team_%s' % (w,t)
         myConstr[constrName] = myGames[t,'BYE','Sun_BYE_NFL', w].setAttr('ub',0)
 
-    for w in range(4, 12):
+    for w in range(1, 18):
         constrName = '02_one_game_per_week_%s_for_team_%s' % (w, t)
         myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, s, w]
                                                            for a in home_games[t]
@@ -207,7 +208,7 @@ for t in teams:
                                                                                          for s in slots[w]) + myGames[
                                                       t, "BYE", 'Sun_BYE_NFL', w]== 1,
                                                   name=constrName)
-
+nflModel.update()
 # for t in teams:
 #     constrName = '02_one_Game_per_week_for_team_%s' % (t)
 #     myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
@@ -263,7 +264,7 @@ for w in range(1,17):
     myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
                                                        for t in teams
                                                        for a in home_games[t]
-                                                       for s in slots[w] if s[:5] == 'THU_L') ==1,
+                                                       for s in slots[w] if s[:5] == 'THU_N') ==1,
                                               name = constrName)
 nflModel.update()
 
@@ -464,16 +465,24 @@ nflModel.update()
 
 # 14th constraint
 # Each team must play at least 2 home/away games every 6 weeks
+
 for t in teams:
     for i in range(1, 13):
         constrName = '14_2_homeAway_games_every6weeks_%s' % (t)
         myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, s, w]
                                                            for a in home_games[t]
                                                            for w in range(i, i+6)
-                                                           for s in slots[w]) + quicksum(myGames[h,t,s,w]
-                                                                                         for h in away_games[t]
-                                                                                         for w in range(i,i+6)
-                                                                                         for s in slots[w]) >= 2,
+                                                           for s in slots[w]) >= 2,
+                                                  name = constrName)
+nflModel.update()
+
+for t in teams:
+    for i in range(1,13):
+        constrName = '14_2_away_gaems_6_weeks_%s_week_%s' % (t,i)
+        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[h,t,s,w]
+                                                           for h in away_games[t]
+                                                           for w in range(i,i+6)
+                                                           for s in slots[w]) >=2,
                                                   name = constrName)
 nflModel.update()
 
@@ -483,15 +492,24 @@ nflModel.update()
 
 for t in teams:
     for i in range(1,9):
-        constrName = '15_4_homeAway_everyTenWeeks_%s' % (t)
+        constrName = '15_4_home_everyTenWeeks_%s' % (t)
         myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
                                                    for a in home_games[t]
                                                    for w in range(i,i+10)
-                                                   for s in slots[w]) + quicksum(myGames[h,t,s,w]
-                                                                                 for h in away_games[t]
-                                                                                 for w in range(i,i+10)
-                                                                                 for s in slots[w]) >= 4,
+                                                   for s in slots[w]) >= 4,
                                           name = constrName)
+
+nflModel.update()
+
+for t in teams:
+    for i in range(1,9):
+        constrName = '15_4_Away_everyTenWeeks_%s' % (t)
+        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[h,t,s,w]
+                                                   for h in away_games[t]
+                                                   for w in range(i,i+10)
+                                                   for s in slots[w]) >= 4,
+                                          name = constrName)
+
 nflModel.update()
 
 
@@ -500,7 +518,7 @@ nflModel.update()
 champ = ['DEN']
 for t in champ:
     constrName = '16_SuperBowlChamp_%s_Opens_At_Home' % champ
-    myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'THU_L_NBC', 1]
+    myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'THU_N_NBC', 1]
                                            for a in home_games[t]) == 1,
                                   name = constrName)
 nflModel.update()
@@ -548,7 +566,7 @@ nflModel.update()
 # NBC only getting game week 1
 
 constrName = '18_nbc_thurs_night_week_1'
-myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'THU_L_NBC', 1]
+myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'THU_N_NBC', 1]
                                           for t in teams
                                           for a in home_games[t]) == 1,
                                           name = constrName)
