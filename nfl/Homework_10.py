@@ -93,7 +93,7 @@ conference = {
             'TB', 'ARZ', 'SEA', 'LAR', 'SF')
 }
 # Division Dict - lists all 4 teams in each of 8 divisions
-division = {
+league = {
     'AFC': {
         'EAST': {'NE', 'NYJ', 'BUF', 'MIA'},
         'WEST': {'DEN', 'KC', 'OAK', 'SD'},
@@ -723,13 +723,13 @@ nflModel.update()
 # No team can have more than 5 prime time games in a season (Thanksgiving day games do not count as primetime)
 # Primetime games = MON_1_ESPN, MON_2_ESPN, SUN_D_CBS, SUN_D_FOX, SUN_N_NBC, THU_L_CBS, THU_N_NBC,
 primetime = ['MON_1_ESPN', 'MON_2_ESPN', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'THU_L_CBS', 'THU_N_NBC']
-#
+# #
 # for t in teams:
 #         constrName = '26_limit_primetime_team_%s_slot_%s' % (t,s)
 #         myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
 #                                                            for a in home_games[t]
 #                                                            for s in primetime
-#                                                            for w in range(1,18)),
+#                                                            for w in range(1,18)) <=5 ,
 #                                                   name = constrName)
 
 
@@ -737,13 +737,6 @@ primetime = ['MON_1_ESPN', 'MON_2_ESPN', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 
 # No more than 4 games on NBC in a season
 # Already happening due to dictionary?
 
-# myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
-#                                                           for t in teams
-#                                                           for a in home_games[t]
-#                                                           for w in range(1,18)
-#                                                           for s in slots[w] if s[6:]=='NBC') <= 4,
-#                                                  name = constrName)
-# nflModel.update()
 
 for t in teams:
    for a in home_games[t]:
@@ -757,14 +750,85 @@ nflModel.update()
 
 # TODO 28th Constraint- what is the international game time slot??
 # Teams playing an international game will have a home game the week before their international game
+constrName = 'IND_home_before_int_game'
+myConstr[constrName] = nflModel.addConstr(quicksum(myGames['IND', a, s, 3]
+                                           for a in home_games['IND']
+                                           for s in slots[w]) == 1,
+                                  name=constrName)
+nflModel.update()
 
+constrName = 'JAC_home_before_int_game'
+myConstr[constrName] = nflModel.addConstr(quicksum(myGames['JAC', a, s, 3]
+                                           for a in home_games['JAC']
+                                           for s in slots[w]) == 1,
+                                  name=constrName)
+#
+constrName = 'LAR_home_before_int_game'
+myConstr[constrName] = nflModel.addConstr(quicksum(myGames['LAR', a, s, 6]
+                                           for a in home_games['LAR']
+                                           for s in slots[w]) == 1,
+                                  name=constrName)
+nflModel.update()
+#
+constrName = 'NYG_home_before_int_game'
+myConstr[constrName] = nflModel.addConstr(quicksum(myGames['NYG', a, s, 6]
+                                           for a in home_games['NYG']
+                                           for s in slots[w]) == 1,
+                                  name=constrName)
+nflModel.update()
+#
+constrName = 'CIN_home_before_int_game'
+myConstr[constrName] = nflModel.addConstr(quicksum(myGames['CIN', a, s, 7]
+                                           for a in home_games['CIN']
+                                           for s in slots[w]) == 1,
+                                  name=constrName)
+nflModel.update()
+#
+constrName = 'WAS_home_before_int_game'
+myConstr[constrName] = nflModel.addConstr(quicksum(myGames['WAS', a, s, 7]
+                                           for a in home_games['WAS']
+                                           for s in slots[w]) == 1,
+                                  name=constrName)
+nflModel.update()
+
+constrName = 'HOU_home_before_int_game'
+myConstr[constrName] = nflModel.addConstr(quicksum(myGames['HOU', a, s, 11]
+                                           for a in home_games['HOU']
+                                           for s in slots[w]) == 1,
+                                  name=constrName)
+nflModel.update()
+
+constrName = 'OAK_home_before_int_game'
+myConstr[constrName] = nflModel.addConstr(quicksum(myGames['OAK', a, s, 11]
+                                           for a in home_games['OAK']
+                                           for s in slots[w]) == 1,
+                                  name=constrName)
+nflModel.update()
 
 # TODO 29th Constraint
 # Teams playing an international game will have their BYE game the week following the international game
+constrName = "29_JAC_IND_BYE_%s" % (w)
+myConstr[constrName] = nflModel.addConstr(
+    myGames['IND', "BYE", "Sun_BYE_NFL", 4] + myGames["JAC", "BYE", "Sun_BYE_NFL", 4] == 2,
+    name=constrName)
+nflModel.update()
 
+constrName = "29_LAR_NYG_BYE_%s" % (w)
+myConstr[constrName] = nflModel.addConstr(
+    myGames['LAR', "BYE", "Sun_BYE_NFL", 7] + myGames["NYG", "BYE", "Sun_BYE_NFL", 7] == 2,
+    name=constrName)
+nflModel.update()
+
+constrName = "29_CIN_WAS_BYE_%s" % (w)
+myConstr[constrName] = nflModel.addConstr(
+    myGames['CIN', "BYE", "Sun_BYE_NFL", 8] + myGames["WAS", "BYE", "Sun_BYE_NFL", 8] == 2,
+    name=constrName)
+nflModel.update()
 
 # TODO 30th Constraint
 # Two teams cannot play back to back games against each other or play against each other the week before and after a BYE
+
+
 # for t in teams:
 #     for a in home_games[t]:
 #         for w in range(1,17):
@@ -784,11 +848,57 @@ nflModel.update()
 # No team plays more than 2 road games against teams coming off a BYE
 
 
+
 # TODO 32nd Constraint
 # All teams playing away on Thursday night are home the week before
+# for t in teams:
+#     for a in home_games[t]:
+#         for w in range(2, 18):
+#             lastWeek = w - 1
+#             constrName = '32_home_before_playing_thursday'
+#             myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, s, w]
+#                                                                for s in slots[w] if s[:4] == 'THU_N') + quicksum(myGames[a,away,s,lastWeek]
+#                                                                                                                  for away in home_games[a]
+#                                                                                                                  for s in slots[lastWeek]) + quicksum(myGames[t,a,s,lastWeek]
+#                                                                                                                                                      for a in home_games[t]
+#                                                                                                                                                      for s in slots[lastWeek]) == 3,
+#                                                       name = constrName)
+#
+# nflModel.update()
+
 
 # TODO 33rd Constraint
 # Week 17 will consist of games between division opponents only
+# league = {
+#     'AFC': {
+#         'EAST': {'NE', 'NYJ', 'BUF', 'MIA'},
+#         'WEST': {'DEN', 'KC', 'OAK', 'SD'},
+#         'SOUTH': {'HOU', 'IND', 'JAC', 'TEN'},
+#         'NORTH': {'CIN', 'PIT', 'BAL', 'CLE'}
+#     },
+#     'NFC': {
+#         'EAST': {'WAS', 'PHI', 'NYG''DAL'},
+#         'WEST': {'ARZ', 'SEA', 'LAR', 'SF'},
+#         'SOUTH': {'CAR', 'ATL', 'NO', 'TB'},
+#         'NORTH': {'MIN', 'GB', 'DET', 'CHI'}
+#     }
+#
+# }
+#
+# teams = ('NE', 'NYJ', 'BUF', 'MIA', 'CIN', 'PIT', 'BAL', 'CLE', 'HOU', 'IND', 'JAC',
+#          'TEN', 'DEN', 'KC', 'OAK', 'SD', 'WAS', 'PHI', 'NYG', 'DAL', 'MIN', 'GB', 'DET', 'CHI', 'CAR', 'ATL', 'NO',
+#          'TB', 'ARZ', 'SEA', 'LAR', 'SF')
+#
+#
+#
+#
+#
+# for conf in league:
+#     for division in league[conf]:
+#         for team in league[conf][division]:
+#             print team
+#
+#             print team in league[conf]['WEST']
 
 
 nflModel.setParam('MIPFocus', 1)
