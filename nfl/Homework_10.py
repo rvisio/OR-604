@@ -1,14 +1,7 @@
+# -*- coding: utf-8 -*-
+
 from gurobipy import *
 import sqlite3
-
-# TODO
-# Update constraintNames at end of each addConstr procedure -- right now it is just calling the constraint name
-# we are writing to the optimize.lp file. Sometimes warning message popping up like Warning: constraints 1029 and 1030 have the same name "10_First_Week_MNF_1"
-
-# TODO
-# 1) Change constraint in six to commented code and adjust if needed
-# 2) Check that home_games[t] vs away_games[t] is correct in constraint six
-# 3) Once Dr.C sends his comments, update/fix what is needed
 
 
 dbName = "hw_9.db"
@@ -596,174 +589,171 @@ nflModel.update()
 # TODO 21st Constraint
 # Fox/CBS Get at least 3 early games on Sundays
 
-# Sun_E_CBS games
-# for t in teams:
-#     for a in home_games[t]:
-#         constrName = '21_at_least_3_early_games_SUN_E_CBS'
-#         myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'Sun_E_CBS', w]
-#                                                        for w in range(1, 18)) <= 18,
-#                                               name=constrName)
-#
-#
-# nflModel.update()
+#for w in range(1,2):
+#constrName = '21_Limit_Sunday_Night_Games_%s' % (w)
+#myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'Sun_E_FOX', 1]
+#                                                   for t in teams
+#                                                   for a in home_games[t]) >= 3,
+#                                          name=constrName)
+#nflModel.update()
 
-# constrName = '21_at_least_3_early_games_SUN_E_CBS'
-# myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
-#                                                    for t in teams
-#                                                    for a in home_games[t]
-#                                                    for w in range(1,18)
-#                                                    for s in slots[w]) >= 3,
-#                                           name = constrName)
-# nflModel.update()
-#
-# constrName = '21_at_least_3_early_games_SUN_E_CBS'
-# myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
-#                                                    for t in teams
-#                                                    for a in home_games[t]
-#                                                    for w in range(1,18)
-#                                                    for s in slots[w]) <= 17,
-#                                           name = constrName)
-# nflModel.update()
 
-# for t in teams:
-#     for a in home_games[t]:
-#         constrName = '21_at_least_3_early_games_SUN_E_CBS'
-#         myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'Sun_E_CBS', w]
-#                                                        for w in range(1, 18)) >= 3,
-#                                               name=constrName)
-# nflModel.update()
-# #
-# for t in teams:
-#     constrName = '21_at_least_3_early_games_SUN_E_FOX'
-#     myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, s, w]
-#                                                        for a in home_games[t]
-#                                                        for w in range(1,18)
-#                                                        for s in slots[w] if s == 'SUN_E_FOX') >= 3,
-#                                               name = constrName)
-#
-# for w in range(1, 18):
-#     for t in teams:
-#         constrName = '21_at_least_3_early_games_SUN_E_FOX'
-#         myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, s, w]
-#                                                for a in home_games[t]
-#                                                for s in slots[w] if s == 'Sun_E_FOX') >= 3,
-#                                       name=constrName)
-#
-# nflModel.update()
+for w in range(1, 18):
+    constrName = '21_Limit_Sunday_Night_Games_CBS%s' % (w)
+    myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'Sun_E_CBS', w]
+                                                       for t in teams
+                                                       for a in home_games[t]) >= 3,
+                                              name=constrName)
+nflModel.update()
+
+#21 b
+
+for w in range(1, 18):
+    constrName = '21_Limit_Sunday_Night_Games_FOX%s' % (w)
+    myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'Sun_E_FOX', w]
+                                                       for t in teams
+                                                       for a in home_games[t]) >= 3,
+                                              name=constrName)
+nflModel.update()
+
+
+
 
 
 # TODO 22nd constraint
 # Fox/CBS each get at least 5 games on sundays
 # Same as 21st/15th constraint?
-# for w in range(1, 18):
-#     for t in teams:
-#         constrName = '22_at_least_5_sun_games_SUN_CBS'
-#         myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'Sun_E_CBS', w]
-#                                                            for a in home_games[t]) + quicksum(
-#             myGames[t, a, 'SUN_L_CBS', w]
-#             for a in home_games[t]) +
-#                                                   quicksum(myGames[t, a, 'SUN_D_CBS', w]
-#                                                            for a in home_games[t]) >= 5,
-#                                                   name=constrName)
-# nflModel.update()
 
-# for t in teams:
-#     for w in range(1, 18):
-#         constrName = '22_at_least_5_sun_games_SUN_E_FOX'
-#         myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'Sun_E_FOX', w]
-#                                                for a in home_games[t]) + quicksum(myGames[t, a, 'SUN_L_FOX', w]
-#                                                                              for a in home_games[t]) +
-#                                       quicksum(myGames[t, a, 'SUN_D_FOX', w]
-#                                                for a in home_games[t]) >= 5,
-#                                      name = constrName)
-#nflModel.update()
+for w in range(1,18):
+    constrName = '22_at_least_5_sun_games_SUN_CBS'
+    myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'Sun_E_CBS', w]
+                                                           for t in teams
+                                                           for a in home_games[t]) + quicksum(
+            myGames[t, a, 'SUN_L_CBS', w]
+            for t in teams
+            for a in home_games[t]) +
+                                                  quicksum(myGames[t, a, 'SUN_D_CBS', w]
+                                                           for t in teams
+                                                           for a in home_games[t]) >= 5,
+                                                  name=constrName)
+nflModel.update()
+
+for w in range(1,18):
+    constrName = '22_at_least_5_sun_games_SUN_FOX'
+    myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'Sun_E_FOX', w]
+                                                           for t in teams
+                                                           for a in home_games[t]) + quicksum(
+            myGames[t, a, 'SUN_L_FOX', w]
+            for t in teams
+            for a in home_games[t]) +
+                                                  quicksum(myGames[t, a, 'SUN_D_FOX', w]
+                                                           for t in teams
+                                                           for a in home_games[t]) >= 5,
+                                                  name=constrName)
+nflModel.update()
+
 
 # TODO 23rd Constraint
 # Fox/CBS each get 8 double headers total for weeks 1 - 16
 # use iterator
 
 
-# for t in teams:
-#     constrName = '23_eight_double_headers_FOX'
-#     myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'SUN_D_FOX', w]
-#                                                        for a in home_games[t]
-#                                                        for w in range(1, 17)) >= 8,
-#                                               name=constrName)
-# nflModel.update()
-#
-# for t in teams:
-#     constrName = '23_eight_double_headers_CBS'
-#     myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'SUN_D_CBS', w]
-#                                                        for a in home_games[t]
-#                                                        for w in range(1, 17)) >= 8,
-#                                               name=constrName)
-# nflModel.update()
+
+constrName = '23_eight_double_headers_FOX'
+myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'SUN_D_FOX', w]
+                                                       for t in teams
+                                                       for a in home_games[t]
+                                                       for w in range(1, 17)) >= 8,
+                                              name=constrName)
+nflModel.update()
 
 
-# for w in range(1, 17):
-#     for t in teams:
-#         constrName = '23a_eight_double_headers_CBS'
-#         myConstr = nflModel.addConstr(quicksum(myGames[t, a, s, w]
-#                                                for a in home_games[t]
-#                                                for s in slots[w] if s == 'Sun_D_CBS') == 8,
-#                                       name=constrName)
-# nflModel.update()
+constrName = '23_eight_double_headers_CBS'
+myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'SUN_D_CBS', w]
+                                                       for t in teams
+                                                       for a in home_games[t]
+                                                       for w in range(1, 17)) >= 8,
+                                              name=constrName)
+nflModel.update()
 
 
 # TODO 24th constraint
 # FOX/CBS each get a double header in week 17
 # Scheduling dictionary already accounts for this
-constrName = '24_fox_doubleHeader'
+#dont think it does because just bc we have it doesn't make it have a dh
+
+constrName = '24_fox_dh'
 myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'SUN_D_FOX', 17]
-                                       for t in teams
-                                       for a in home_games[t]) == 1,
-                              name = constrName)
+                                          for t in teams
+                                          for a in home_games[t]) == 1,
+                                          name = constrName)
 nflModel.update()
 
-constrName = '24_cbs_doubleheader'
+constrName = '24_cbs_dh'
 myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, 'SUN_D_CBS', 17]
-                                       for t in teams
-                                       for a in home_games[t]) == 1,
-                              name = constrName)
+                                          for t in teams
+                                          for a in home_games[t]) == 1,
+                                          name = constrName)
 nflModel.update()
 
 # TODO 25th constraint
 # FOX/CBS cannot have more than 2 double headers in a row  -- not working
 
 for t in teams:
-    constrName = '25cbs_Max_two_DH_%s' % t
-    for i in range(1,17):
-        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, s, w]
-                                                           for a in home_games[t]
-                                                           for w in range(i, i+1)
-                                                           for s in slots[w] if s == 'SUN_D_CBS') <= 2,
-                                                  name = constrName)
+   constrName = '25cbs_Max_two_DH_%s' % t
+   for i in range(1,17):
+       myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, s, w]
+                                                          for a in home_games[t]
+                                                          for w in range(i, i+1)
+                                                          for s in slots[w] if s == 'SUN_D_CBS') <= 2,
+                                                 name = constrName)
 nflModel.update()
 
 for t in teams:
-    constrName = '25fox_Max_two_DH_%s' % t
-    for i in range(1,17):
-        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, s, w]
-                                                           for a in home_games[t]
-                                                           for w in range(i,i+1)
-                                                           for s in slots[w] if s == 'SUN_D_FOX') <= 2,
-                                                  name = constrName)
+   constrName = '25fox_Max_two_DH_%s' % t
+   for i in range(1,17):
+       myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t, a, s, w]
+                                                          for a in home_games[t]
+                                                          for w in range(i,i+1)
+                                                          for s in slots[w] if s == 'SUN_D_FOX') <= 2,
+                                                 name = constrName)
 nflModel.update()
 
 # TODO 26th constraint
 # No team can have more than 5 prime time games in a season (Thanksgiving day games do not count as primetime)
 # Primetime games = MON_1_ESPN, MON_2_ESPN, SUN_D_CBS, SUN_D_FOX, SUN_N_NBC, THU_L_CBS, THU_N_NBC,
+primetime = ['MON_1_ESPN', 'MON_2_ESPN', 'SUN_D_CBS', 'SUN_D_FOX', 'SUN_N_NBC', 'THU_L_CBS', 'THU_N_NBC']
+#
+# for t in teams:
+#         constrName = '26_limit_primetime_team_%s_slot_%s' % (t,s)
+#         myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
+#                                                            for a in home_games[t]
+#                                                            for s in primetime
+#                                                            for w in range(1,18)),
+#                                                   name = constrName)
+
 
 # TODO 27th Constraint
 # No more than 4 games on NBC in a season
 # Already happening due to dictionary?
+
+# myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
+#                                                           for t in teams
+#                                                           for a in home_games[t]
+#                                                           for w in range(1,18)
+#                                                           for s in slots[w] if s[6:]=='NBC') <= 4,
+#                                                  name = constrName)
+# nflModel.update()
+
 for t in teams:
-    for a in home_games[t]:
-        constrName = '27_no_more_than_4_nbc_%s_%s' % (t,a)
-        myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
-                                                           for w in range(1,18)
-                                                           for s in slots[w] if s[6:]=='NBC') <= 4,
-                                                  name = constrName)
+   for a in home_games[t]:
+       constrName = '27_no_more_than_4_nbc_%s_%s' % (t,a)
+       myConstr[constrName] = nflModel.addConstr(quicksum(myGames[t,a,s,w]
+                                                          for w in range(1,18)
+                                                          for s in slots[w] if s[6:]=='NBC') <= 4,
+                                                 name = constrName)
+nflModel.update()
+
 
 # TODO 28th Constraint- what is the international game time slot??
 # Teams playing an international game will have a home game the week before their international game
